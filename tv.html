@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lion Madness '26 - Live Bracket</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body { background-color: #111; color: white; font-family: 'Arial', sans-serif; text-align: center; }
+    .matchup-container { display: flex; justify-content: space-around; align-items: center; margin-top: 20vh; }
+    .competitor { font-size: 4em; font-weight: bold; background: #222; padding: 50px; border-radius: 20px; width: 40%; box-shadow: 0 0 20px rgba(255, 165, 0, 0.5); }
+    .vs { font-size: 3em; color: #ff9800; font-style: italic; }
+    #round-title { font-size: 2.5em; margin-top: 20px; text-transform: uppercase; letter-spacing: 5px; color: #ff9800; }
+  </style>
+</head>
+<body>
+  
+  <audio id="bg-music" loop src="bg-music.mp3"></audio>
+  <audio id="cheer-sfx" src="cheer.mp3"></audio>
+  
+  <h1 id="round-title">Waiting to Start...</h1>
+  
+  <div class="matchup-container">
+    <div id="team1" class="competitor">Team 1</div>
+    <div class="vs">VS</div>
+    <div id="team2" class="competitor">Team 2</div>
+  </div>
+
+  <button onclick="document.getElementById('bg-music').play()" style="margin-top: 50px; padding: 10px;">Start Music (Unmute)</button>
+
+  <script src="logic.js"></script>
+  <script>
+    // Listen for real-time changes
+    db.ref('tournament').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if(data) {
+        document.getElementById('round-title').innerText = "Current Matchup";
+        
+        // Logic to determine who is playing based on the currentMatchIndex
+        // (For simplicity in this snippet, showing the First Four logic)
+        if(data.status === "FIRST_FOUR") {
+            let t1 = data.firstFour[data.currentMatchIndex * 2];
+            let t2 = data.firstFour[(data.currentMatchIndex * 2) + 1];
+            
+            // Check if match changed (to play sound effect)
+            if(document.getElementById('team1').innerText !== t1 && document.getElementById('team1').innerText !== "Team 1") {
+                document.getElementById('cheer-sfx').play();
+            }
+
+            document.getElementById('team1').innerText = t1 || "TBD";
+            document.getElementById('team2').innerText = t2 || "TBD";
+        }
+      }
+    });
+  </script>
+</body>
+</html>

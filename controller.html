@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Master Controller</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body { background-color: #222; color: white; font-family: Arial; text-align: center; padding: 20px; }
+    button { width: 100%; padding: 30px; margin: 10px 0; font-size: 1.5em; border-radius: 10px; border: none; font-weight: bold; }
+    .btn-team1 { background-color: #e53935; color: white; }
+    .btn-team2 { background-color: #1e88e5; color: white; }
+    .btn-admin { background-color: #43a047; color: white; margin-top: 50px; }
+  </style>
+</head>
+<body>
+  
+  <h2>Committee Controller</h2>
+  
+  <button id="btn-t1" class="btn-team1" onclick="vote(1)">Team 1</button>
+  <h3>VS</h3>
+  <button id="btn-t2" class="btn-team2" onclick="vote(2)">Team 2</button>
+
+  <hr style="margin-top:40px; border-color:#444;">
+  <button class="btn-admin" onclick="initializeTournament()">Initialize / Shuffle Bracket</button>
+
+  <script src="logic.js"></script>
+  <script>
+    let currentT1 = "";
+    let currentT2 = "";
+    let matchIndex = 0;
+
+    db.ref('tournament').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if(data && data.status === "FIRST_FOUR") {
+         currentT1 = data.firstFour[data.currentMatchIndex * 2];
+         currentT2 = data.firstFour[(data.currentMatchIndex * 2) + 1];
+         matchIndex = data.currentMatchIndex;
+
+         document.getElementById('btn-t1').innerText = "Vote: " + currentT1;
+         document.getElementById('btn-t2').innerText = "Vote: " + currentT2;
+      }
+    });
+
+    function vote(teamNumber) {
+        if(confirm("Confirm committee decision?")) {
+            // Advance the match index by 1 to trigger the TV screen change
+            db.ref('tournament/currentMatchIndex').set(matchIndex + 1);
+            
+            // Note: You will write the winner to the `data.winners` array 
+            // to progress them to the Round of 64 here.
+        }
+    }
+  </script>
+</body>
+</html>
