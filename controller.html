@@ -11,14 +11,13 @@
     h2 { color: #D4AF37; letter-spacing: 3px; border-bottom: 2px solid #333; padding-bottom: 10px; }
     button { width: 100%; padding: 25px; margin: 10px 0; font-size: 1.5em; border-radius: 5px; border: 2px solid transparent; font-family: 'Oswald'; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: 0.2s; }
     
-    .btn-team1 { background-color: #111; color: #fff; border-color: #444; }
-    .btn-team2 { background-color: #111; color: #fff; border-color: #444; }
-    .btn-team1:active, .btn-team2:active { background-color: #8A0303; border-color: #8A0303; }
+    .btn-team { background-color: #111; color: #fff; border-color: #444; }
+    .btn-team:active { background-color: #8A0303; border-color: #8A0303; }
     
     .btn-view { background-color: #D4AF37; color: #000; margin-top: 5px; padding: 15px; font-size: 1.2em; }
-    .btn-view:active { background-color: #FFF; }
+    .btn-admin { background-color: #8A0303; color: white; margin-top: 50px; border-color: #ff0000; }
     
-    .btn-admin { background-color: #8A0303; color: white; margin-top: 40px; border-color: #ff0000; }
+    #match-info { color: #aaa; margin-top: 20px; font-size: 1.2em; }
   </style>
 </head>
 <body>
@@ -28,47 +27,62 @@
   <div style="background: #111; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;">
       <h3 style="margin-top: 0; color: #aaa;">TV DISPLAY OVERRIDE</h3>
       <button class="btn-view" onclick="changeView('BRACKET')">👁️ SHOW FULL BRACKET</button>
-      <button class="btn-view" onclick="changeView('MATCHUP')">⚔️ SHOW ACTIVE MATCHUP</button>
+      <button class="btn-view" onclick="changeView('MATCHUP')">⚔️ SHOW ACTIVE MATCH</button>
   </div>
   
-  <h3 style="color: #D4AF37; margin-top: 30px;">RECORD DOMINATION (VOTE)</h3>
-  <button id="btn-t1" class="btn-team1" onclick="vote(1)">TEAM 1</button>
+  <div id="match-info">Loading Match Data...</div>
+  <button id="btn-t1" class="btn-team" onclick="vote(1)">TEAM 1</button>
   <h3 style="color: #8A0303;">VS</h3>
-  <button id="btn-t2" class="btn-team2" onclick="vote(2)">TEAM 2</button>
+  <button id="btn-t2" class="btn-team" onclick="vote(2)">TEAM 2</button>
 
   <hr style="margin-top:40px; border-color:#222;">
   <button class="btn-admin" onclick="initializeTournament()">⚠️ NUKE & RE-SHUFFLE BRACKET</button>
 
   <script src="logic.js"></script>
   <script>
-    let currentT1 = "";
-    let currentT2 = "";
-    let matchIndex = 0;
+    let currentMatch = null;
 
-    // View Toggle
-    function changeView(viewType) {
-        db.ref('tournament/view').set(viewType);
-    }
+    function changeView(viewType) { db.ref('tournament/view').set(viewType); }
 
     db.ref('tournament').on('value', (snapshot) => {
       const data = snapshot.val();
-      if(data && data.status === "FIRST_FOUR") {
-         currentT1 = data.firstFour[data.currentMatchIndex * 2];
-         currentT2 = data.firstFour[(data.currentMatchIndex * 2) + 1];
-         matchIndex = data.currentMatchIndex;
+      if(data && data.matches) {
+         currentMatch = data.matches[data.currentMatchId];
+         
+         let stageText = "Main Bracket";
+         if(data.currentMatchId < 4) stageText = "First Four Play-In";
+         else if(data.currentMatchId >= 64 && data.currentMatchId <= 65) stageText = "FINAL FOUR";
+         else if(data.currentMatchId === 66) stageText = "CHAMPIONSHIP";
 
-         document.getElementById('btn-t1').innerText = "VOTE: " + currentT1;
-         document.getElementById('btn-t2').innerText = "VOTE: " + currentT2;
+         document.getElementById('match-info').innerText = `Match ${data.currentMatchId + 1} / 67  |  ${stageText}`;
+         document.getElementById('btn-t1').innerText = "VOTE: " + currentMatch.t1;
+         document.getElementById('btn-t2').innerText = "VOTE: " + currentMatch.t2;
       }
     });
 
     function vote(teamNumber) {
-        if(confirm("LOCK IN THE ALPHA?")) {
-            // Advances to the next match to trigger the TV screen update
-            db.ref('tournament/currentMatchIndex').set(matchIndex + 1);
+        if(!currentMatch || currentMatch.t1.includes("Waiting") || currentMatch.t2.includes("Waiting")) {
+            alert("Cannot vote yet! Waiting for a previous matchup to finish.");
+            return;
+        }
+
+        let winnerName = teamNumber === 1 ? currentMatch.t1 : currentMatch.t2;
+
+        if(confirm(`Lock in ${winnerName} as the Alpha?`)) {
+            // 1. Save winner of current match
+            db.ref(`tournament/matches/${currentMatch.id}/winner`).set(winnerName);
             
-            // Note: In the fully expanded 64-round logic, you will push the 
-            // selected team string to a `data.winners` array here.
+            // 2. Forward winner to next match slot
+            if(currentMatch.nextMatch !== undefined) {
+                db.ref(`tournament/matches/${currentMatch.nextMatch}/${currentMatch.nextSlot}`).set(winnerName);
+            }
+
+            // 3. Advance the global match counter
+            if (currentMatch.id < 66) {
+                db.ref('tournament/currentMatchId').set(currentMatch.id + 1);
+            } else {
+                alert(`TOURNAMENT COMPLETE! ${winnerName} REIGNS SUPREME.`);
+            }
         }
     }
   </script>

@@ -10,7 +10,6 @@ const firebaseConfig = {
   measurementId: "G-8R2NYZ40MD"
 };
 
-// Initialize Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -38,28 +37,52 @@ function shuffle(array) {
 
 function initializeTournament() {
   const randomized = shuffle([...rawCompetitors]);
+  let matches = [];
   
-  const firstFour = randomized.slice(0, 8);
-  const mainTeams = randomized.slice(8); 
+  // Create 67 empty match objects
+  for(let i=0; i<67; i++) {
+      matches.push({ id: i, t1: "TBD", t2: "TBD", winner: null });
+  }
 
-  // Build the 64 team bracket, injecting First Four placeholders at the 16-seed spots
-  let bracket64 = [];
-  let mainIdx = 0;
-  for(let i = 0; i < 64; i++) {
-     if(i === 15 || i === 31 || i === 47 || i === 63) {
-         bracket64.push(`[Winner of FF ${(i+1)/16}]`);
-     } else {
-         bracket64.push(mainTeams[mainIdx++]);
-     }
+  // --- BUILD THE ROUTING TREE ---
+  // R64 (matches 4-35) route to R32 (matches 36-51)
+  for(let i=0; i<32; i++) { matches[i+4].nextMatch = 36 + Math.floor(i/2); matches[i+4].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
+  // R32 (36-51) route to S16 (52-59)
+  for(let i=0; i<16; i++) { matches[i+36].nextMatch = 52 + Math.floor(i/2); matches[i+36].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
+  // S16 (52-59) route to E8 (60-63)
+  for(let i=0; i<8; i++) { matches[i+52].nextMatch = 60 + Math.floor(i/2); matches[i+52].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
+  // E8 (60-63) route to F4 (64-65)
+  for(let i=0; i<4; i++) { matches[i+60].nextMatch = 64 + Math.floor(i/2); matches[i+60].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
+  // F4 (64-65) route to Championship (66)
+  for(let i=0; i<2; i++) { matches[i+64].nextMatch = 66; matches[i+64].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
+
+  // --- POPULATE INITIAL TEAMS ---
+  // 1. First Four (Matches 0-3)
+  for(let i=0; i<4; i++) {
+      matches[i].t1 = randomized[i*2];
+      matches[i].t2 = randomized[i*2 + 1];
+      let destR64 = [4, 12, 20, 28]; // The matches where First Four winners go
+      matches[i].nextMatch = destR64[i];
+      matches[i].nextSlot = 't2';
+  }
+
+  // 2. Main Bracket (Matches 4-35)
+  let remainingTeams = randomized.slice(8);
+  let teamIdx = 0;
+  for(let i=4; i<36; i++) {
+      if ([4, 12, 20, 28].includes(i)) {
+          matches[i].t1 = remainingTeams[teamIdx++];
+          matches[i].t2 = "Waiting on First Four..."; 
+      } else {
+          matches[i].t1 = remainingTeams[teamIdx++];
+          matches[i].t2 = remainingTeams[teamIdx++];
+      }
   }
 
   db.ref('tournament').set({
-    status: "FIRST_FOUR", 
-    view: "BRACKET", // Starts on the bracket view
-    firstFour: firstFour,
-    mainBracket: bracket64,
-    currentMatchIndex: 0,
-    winners: []
+    view: "BRACKET", 
+    currentMatchId: 0,
+    matches: matches
   });
-  alert("ALPHA TOURNAMENT INITIALIZED! GRINDSET ACTIVE.");
+  alert("ALPHA BRACKET GENERATED AND SYNCED.");
 }

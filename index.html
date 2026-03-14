@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lion Madness '26 - THE ARENA</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #050505; color: #fff; font-family: 'Oswald', sans-serif; text-align: center; margin: 0; padding: 10px; overflow: hidden; }
+    .gold-text { color: #D4AF37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); text-transform: uppercase; letter-spacing: 4px; margin: 5px 0; }
+    .blood-text { color: #8A0303; text-shadow: 0 0 10px rgba(138, 3, 3, 0.8); }
+    
+    /* Active Matchup View */
+    #matchup-view { margin-top: 15vh; }
+    .matchup-container { display: flex; justify-content: space-around; align-items: center; margin-top: 5vh; }
+    .competitor { font-size: 5em; font-weight: 700; background: linear-gradient(145deg, #111, #000); padding: 50px; border-radius: 10px; width: 35%; border: 2px solid #D4AF37; box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); text-transform: uppercase; }
+    
+    /* Full Bracket View */
+    #bracket-view { display: flex; flex-direction: column; height: 95vh; }
+    .bracket-arena { display: flex; justify-content: space-between; width: 100%; height: 100%; margin-top: 10px; }
+    .bracket-half { display: flex; width: 42%; justify-content: space-between; }
+    .bracket-half.right { flex-direction: row-reverse; }
+    .round-col { display: flex; flex-direction: column; justify-content: space-around; flex: 1; margin: 0 5px; }
+    
+    .match-box { background: #111; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 0.8vw; text-transform: uppercase; position: relative; }
+    .match-box.active-match { border-color: #8A0303; background: #220000; box-shadow: 0 0 15px #8A0303; z-index: 10; transform: scale(1.1); transition: 0.3s;}
+    .match-box.completed { border-color: #D4AF37; opacity: 0.7; }
+    .team-line { border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .winner-text { color: #D4AF37; font-weight: bold; }
+    
+    .center-stage { width: 15%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
+    .center-match { width: 100%; background: #111; border: 2px solid #D4AF37; padding: 10px; font-size: 1vw; text-align: center; }
+
+    /* Controls */
+    .audio-controls { position: fixed; bottom: 10px; right: 10px; display: flex; gap: 10px; z-index: 100; }
+    button { background: #111; color: #D4AF37; border: 1px solid #D4AF37; padding: 10px 15px; font-family: 'Oswald'; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+    button:hover { background: #D4AF37; color: #000; }
+    button.muted { color: #8A0303; border-color: #8A0303; }
+  </style>
+</head>
+<body>
+  
+  <audio id="bg-music" loop src="bg-music.mp3"></audio>
+  <audio id="cheer-sfx" src="cheer.mp3"></audio>
+
+  <div id="matchup-view" style="display: none;">
+      <h1 class="gold-text" style="font-size: 3em;">DOMINATION ARENA</h1>
+      <div class="matchup-container">
+        <div id="active-t1" class="competitor">TBD</div>
+        <div class="blood-text" style="font-size: 5em; font-style: italic;">VS</div>
+        <div id="active-t2" class="competitor">TBD</div>
+      </div>
+  </div>
+
+  <div id="bracket-view">
+      <h1 class="gold-text" style="font-size: 2.5em; margin:0;">LION MADNESS '26</h1>
+      <div class="bracket-arena">
+          <div class="bracket-half left" id="left-half"></div>
+          <div class="center-stage" id="center-stage"></div>
+          <div class="bracket-half right" id="right-half"></div>
+      </div>
+  </div>
+
+  <div class="audio-controls">
+      <button id="btn-bgm" onclick="toggleBGM()">🔊 BGM: ON</button>
+      <button id="btn-sfx" onclick="toggleSFX()">🔊 SFX: ON</button>
+  </div>
+
+  <script src="logic.js"></script>
+  <script>
+    let sfxEnabled = true;
+
+    function toggleBGM() {
+        const bgm = document.getElementById('bg-music');
+        const btn = document.getElementById('btn-bgm');
+        if(bgm.paused || bgm.muted) { bgm.muted = false; bgm.play(); btn.innerText = "🔊 BGM: ON"; btn.classList.remove('muted'); } 
+        else { bgm.muted = true; btn.innerText = "🔇 BGM: MUTED"; btn.classList.add('muted'); }
+    }
+
+    function toggleSFX() {
+        const btn = document.getElementById('btn-sfx');
+        sfxEnabled = !sfxEnabled;
+        if(sfxEnabled) { btn.innerText = "🔊 SFX: ON"; btn.classList.remove('muted'); } 
+        else { btn.innerText = "🔇 SFX: MUTED"; btn.classList.add('muted'); }
+    }
+
+    function playSFX() {
+        if(sfxEnabled) {
+            let sfx = document.getElementById('cheer-sfx');
+            sfx.currentTime = 0;
+            sfx.play().catch(e => console.log(e));
+        }
+    }
+
+    // Bracket DOM Generation
+    function generateColumn(startIdx, endIdx) {
+        let col = document.createElement('div');
+        col.className = 'round-col';
+        for(let i=startIdx; i<=endIdx; i++) {
+            col.innerHTML += `<div class="match-box" id="match-${i}">
+                <div class="team-line" id="m${i}-t1"></div>
+                <div class="team-line" id="m${i}-t2" style="border:none; margin:0; padding:0;"></div>
+            </div>`;
+        }
+        return col;
+    }
+
+    // Build the board layout once
+    document.getElementById('left-half').append(
+        generateColumn(4, 19), generateColumn(36, 43), generateColumn(52, 55), generateColumn(60, 61)
+    );
+    document.getElementById('right-half').append(
+        generateColumn(20, 35), generateColumn(44, 51), generateColumn(56, 59), generateColumn(62, 63)
+    );
+    document.getElementById('center-stage').innerHTML = `
+        <h3 class="gold-text" style="margin:0;">FINAL FOUR</h3>
+        <div class="center-match" id="match-64"><div id="m64-t1"></div><div id="m64-t2"></div></div>
+        <div class="center-match" id="match-65"><div id="m65-t1"></div><div id="m65-t2"></div></div>
+        <h2 class="blood-text" style="margin:20px 0 0 0;">CHAMPIONSHIP</h2>
+        <div class="center-match" id="match-66" style="border-color:#8A0303; padding:20px;"><div id="m66-t1"></div><div id="m66-t2"></div></div>
+    `;
+
+    let lastMatchId = -1;
+
+    db.ref('tournament').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if(data && data.matches) {
+        
+        // View Toggle
+        document.getElementById('matchup-view').style.display = data.view === "MATCHUP" ? 'block' : 'none';
+        document.getElementById('bracket-view').style.display = data.view === "BRACKET" ? 'flex' : 'none';
+
+        // Update active matchup text
+        let activeMatch = data.matches[data.currentMatchId];
+        if(activeMatch) {
+            document.getElementById('active-t1').innerText = activeMatch.t1;
+            document.getElementById('active-t2').innerText = activeMatch.t2;
+            
+            // Play sound if match advanced
+            if(lastMatchId !== -1 && lastMatchId !== data.currentMatchId) { playSFX(); }
+            lastMatchId = data.currentMatchId;
+        }
+
+        // Fill Bracket Data
+        data.matches.forEach((m, i) => {
+            // First Four (0-3) aren't visibly on the main bracket tree, they just feed into it.
+            if(i >= 4) {
+                let box = document.getElementById(`match-${i}`);
+                let t1El = document.getElementById(`m${i}-t1`);
+                let t2El = document.getElementById(`m${i}-t2`);
+                
+                if(box && t1El && t2El) {
+                    t1El.innerText = m.t1;
+                    t2El.innerText = m.t2;
+                    
+                    // Styling
+                    box.className = 'match-box'; // reset
+                    t1El.className = 'team-line';
+                    t2El.className = 'team-line';
+
+                    if (i === data.currentMatchId) box.classList.add('active-match');
+                    if (m.winner) {
+                        box.classList.add('completed');
+                        if(m.winner === m.t1) t1El.classList.add('winner-text');
+                        if(m.winner === m.t2) t2El.classList.add('winner-text');
+                    }
+                }
+            }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
