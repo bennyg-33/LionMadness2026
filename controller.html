@@ -2,33 +2,53 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Master Controller</title>
+  <title>Alpha Game Master</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #222; color: white; font-family: Arial; text-align: center; padding: 20px; }
-    button { width: 100%; padding: 30px; margin: 10px 0; font-size: 1.5em; border-radius: 10px; border: none; font-weight: bold; }
-    .btn-team1 { background-color: #e53935; color: white; }
-    .btn-team2 { background-color: #1e88e5; color: white; }
-    .btn-admin { background-color: #43a047; color: white; margin-top: 50px; }
+    body { background-color: #050505; color: #fff; font-family: 'Oswald', sans-serif; text-align: center; padding: 20px; margin: 0; }
+    h2 { color: #D4AF37; letter-spacing: 3px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+    button { width: 100%; padding: 25px; margin: 10px 0; font-size: 1.5em; border-radius: 5px; border: 2px solid transparent; font-family: 'Oswald'; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    
+    .btn-team1 { background-color: #111; color: #fff; border-color: #444; }
+    .btn-team2 { background-color: #111; color: #fff; border-color: #444; }
+    .btn-team1:active, .btn-team2:active { background-color: #8A0303; border-color: #8A0303; }
+    
+    .btn-view { background-color: #D4AF37; color: #000; margin-top: 5px; padding: 15px; font-size: 1.2em; }
+    .btn-view:active { background-color: #FFF; }
+    
+    .btn-admin { background-color: #8A0303; color: white; margin-top: 40px; border-color: #ff0000; }
   </style>
 </head>
 <body>
   
-  <h2>Committee Controller</h2>
+  <h2>ALPHA CONTROLLER</h2>
   
-  <button id="btn-t1" class="btn-team1" onclick="vote(1)">Team 1</button>
-  <h3>VS</h3>
-  <button id="btn-t2" class="btn-team2" onclick="vote(2)">Team 2</button>
+  <div style="background: #111; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;">
+      <h3 style="margin-top: 0; color: #aaa;">TV DISPLAY OVERRIDE</h3>
+      <button class="btn-view" onclick="changeView('BRACKET')">👁️ SHOW FULL BRACKET</button>
+      <button class="btn-view" onclick="changeView('MATCHUP')">⚔️ SHOW ACTIVE MATCHUP</button>
+  </div>
+  
+  <h3 style="color: #D4AF37; margin-top: 30px;">RECORD DOMINATION (VOTE)</h3>
+  <button id="btn-t1" class="btn-team1" onclick="vote(1)">TEAM 1</button>
+  <h3 style="color: #8A0303;">VS</h3>
+  <button id="btn-t2" class="btn-team2" onclick="vote(2)">TEAM 2</button>
 
-  <hr style="margin-top:40px; border-color:#444;">
-  <button class="btn-admin" onclick="initializeTournament()">Initialize / Shuffle Bracket</button>
+  <hr style="margin-top:40px; border-color:#222;">
+  <button class="btn-admin" onclick="initializeTournament()">⚠️ NUKE & RE-SHUFFLE BRACKET</button>
 
   <script src="logic.js"></script>
   <script>
     let currentT1 = "";
     let currentT2 = "";
     let matchIndex = 0;
+
+    // View Toggle
+    function changeView(viewType) {
+        db.ref('tournament/view').set(viewType);
+    }
 
     db.ref('tournament').on('value', (snapshot) => {
       const data = snapshot.val();
@@ -37,18 +57,18 @@
          currentT2 = data.firstFour[(data.currentMatchIndex * 2) + 1];
          matchIndex = data.currentMatchIndex;
 
-         document.getElementById('btn-t1').innerText = "Vote: " + currentT1;
-         document.getElementById('btn-t2').innerText = "Vote: " + currentT2;
+         document.getElementById('btn-t1').innerText = "VOTE: " + currentT1;
+         document.getElementById('btn-t2').innerText = "VOTE: " + currentT2;
       }
     });
 
     function vote(teamNumber) {
-        if(confirm("Confirm committee decision?")) {
-            // Advance the match index by 1 to trigger the TV screen change
+        if(confirm("LOCK IN THE ALPHA?")) {
+            // Advances to the next match to trigger the TV screen update
             db.ref('tournament/currentMatchIndex').set(matchIndex + 1);
             
-            // Note: You will write the winner to the `data.winners` array 
-            // to progress them to the Round of 64 here.
+            // Note: In the fully expanded 64-round logic, you will push the 
+            // selected team string to a `data.winners` array here.
         }
     }
   </script>

@@ -11,7 +11,9 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 
 const rawCompetitors = [
@@ -26,7 +28,6 @@ const rawCompetitors = [
   "Charles Manson", "The Rock.Ai", "50 Cent", "Andrew Jackson"
 ];
 
-// True Randomization (Fisher-Yates)
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -35,21 +36,30 @@ function shuffle(array) {
   return array;
 }
 
-// Function to run ONCE to set up the tournament in the database
 function initializeTournament() {
   const randomized = shuffle([...rawCompetitors]);
   
-  // 60 teams go straight to main bracket (Seeds 1-15)
-  // 8 teams play in the 4 "First Four" games for the 16-seed slots
-  const firstFourTeams = randomized.slice(0, 8);
-  const mainBracketTeams = randomized.slice(8); 
+  const firstFour = randomized.slice(0, 8);
+  const mainTeams = randomized.slice(8); 
+
+  // Build the 64 team bracket, injecting First Four placeholders at the 16-seed spots
+  let bracket64 = [];
+  let mainIdx = 0;
+  for(let i = 0; i < 64; i++) {
+     if(i === 15 || i === 31 || i === 47 || i === 63) {
+         bracket64.push(`[Winner of FF ${(i+1)/16}]`);
+     } else {
+         bracket64.push(mainTeams[mainIdx++]);
+     }
+  }
 
   db.ref('tournament').set({
-    status: "FIRST_FOUR", // or "ROUND_64", etc.
-    firstFour: firstFourTeams,
-    mainTeams: mainBracketTeams,
+    status: "FIRST_FOUR", 
+    view: "BRACKET", // Starts on the bracket view
+    firstFour: firstFour,
+    mainBracket: bracket64,
     currentMatchIndex: 0,
     winners: []
   });
-  alert("Tournament Initialized & Shuffled!");
+  alert("ALPHA TOURNAMENT INITIALIZED! GRINDSET ACTIVE.");
 }
