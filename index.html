@@ -69,6 +69,30 @@
   <script src="logic.js"></script>
   <script>
     let sfxEnabled = true;
+    let currentStage = ""; 
+
+    // --- AUDIO INFRASTRUCTURE UPGRADE ---
+    
+    // 1. Map out the background music for each stage
+    const bgmTracks = {
+        "FIRST_FOUR": "bg-firstfour.mp3", // Matches 0-3
+        "ROUND_64": "bg-r64.mp3",         // Matches 4-35
+        "ROUND_32": "bg-r32.mp3",         // Matches 36-51
+        "SWEET_16": "bg-s16.mp3",         // Matches 52-59
+        "ELITE_8": "bg-e8.mp3",           // Matches 60-63
+        "FINAL_4": "bg-f4.mp3",           // Matches 64-65
+        "CHAMPIONSHIP": "bg-champ.mp3"    // Match 66
+    };
+
+    function determineStage(matchId) {
+        if (matchId <= 3) return "FIRST_FOUR";
+        if (matchId <= 35) return "ROUND_64";
+        if (matchId <= 51) return "ROUND_32";
+        if (matchId <= 59) return "SWEET_16";
+        if (matchId <= 63) return "ELITE_8";
+        if (matchId <= 65) return "FINAL_4";
+        return "CHAMPIONSHIP";
+    }
 
     function toggleBGM() {
         const bgm = document.getElementById('bg-music');
@@ -84,15 +108,24 @@
         else { btn.innerText = "🔇 SFX: MUTED"; btn.classList.add('muted'); }
     }
 
-    function playSFX() {
-        if(sfxEnabled) {
-            let sfx = document.getElementById('cheer-sfx');
-            sfx.currentTime = 0;
-            sfx.play().catch(e => console.log(e));
-        }
+    // 2. Dynamic SFX Player based on Winner Name
+    function playWinnerSFX(winnerName) {
+        if(!sfxEnabled) return;
+
+        // Try to load a custom sound matching the winner's name exactly 
+        // Example: "Bernie Madoff.mp3"
+        let sfx = new Audio(`${winnerName}.mp3`);
+        
+        sfx.play().catch(e => {
+            // If the custom file doesn't exist (404), fall back to the default alpha cheer
+            console.log(`No custom sound for ${winnerName}. Playing default.`);
+            let defaultSfx = document.getElementById('cheer-sfx');
+            defaultSfx.currentTime = 0;
+            defaultSfx.play().catch(err => console.log(err));
+        });
     }
 
-    // Bracket DOM Generation
+    // Bracket DOM Generation (Unchanged)
     function generateColumn(startIdx, endIdx) {
         let col = document.createElement('div');
         col.className = 'round-col';
@@ -105,7 +138,6 @@
         return col;
     }
 
-    // Build the board layout once
     document.getElementById('left-half').append(
         generateColumn(4, 19), generateColumn(36, 43), generateColumn(52, 55), generateColumn(60, 61)
     );
@@ -126,24 +158,43 @@
       const data = snapshot.val();
       if(data && data.matches) {
         
-        // View Toggle
         document.getElementById('matchup-view').style.display = data.view === "MATCHUP" ? 'block' : 'none';
         document.getElementById('bracket-view').style.display = data.view === "BRACKET" ? 'flex' : 'none';
 
-        // Update active matchup text
+        // --- STAGE & BGM CHECK ---
+        let newStage = determineStage(data.currentMatchId);
+        if(newStage !== currentStage) {
+            currentStage = newStage;
+            let bgmPlayer = document.getElementById('bg-music');
+            
+            // Check if we have a track mapped for this stage. If so, swap and play.
+            if(bgmTracks[newStage]) {
+                bgmPlayer.src = bgmTracks[newStage];
+                // Only auto-play if the user hasn't explicitly muted it
+                if(!bgmPlayer.muted) {
+                    bgmPlayer.play().catch(e => console.log("Waiting for user interaction to play audio."));
+                }
+            }
+        }
+
         let activeMatch = data.matches[data.currentMatchId];
         if(activeMatch) {
             document.getElementById('active-t1').innerText = activeMatch.t1;
             document.getElementById('active-t2').innerText = activeMatch.t2;
             
-            // Play sound if match advanced
-            if(lastMatchId !== -1 && lastMatchId !== data.currentMatchId) { playSFX(); }
+            // --- CUSTOM SFX CHECK ---
+            // If the match ID advanced, find out who won the previous match and play their sound
+            if(lastMatchId !== -1 && data.currentMatchId > lastMatchId) { 
+                let previousMatch = data.matches[lastMatchId];
+                if(previousMatch && previousMatch.winner) {
+                    playWinnerSFX(previousMatch.winner);
+                }
+            }
             lastMatchId = data.currentMatchId;
         }
 
-        // Fill Bracket Data
+        // Fill Bracket Data (Unchanged)
         data.matches.forEach((m, i) => {
-            // First Four (0-3) aren't visibly on the main bracket tree, they just feed into it.
             if(i >= 4) {
                 let box = document.getElementById(`match-${i}`);
                 let t1El = document.getElementById(`m${i}-t1`);
@@ -153,8 +204,7 @@
                     t1El.innerText = m.t1;
                     t2El.innerText = m.t2;
                     
-                    // Styling
-                    box.className = 'match-box'; // reset
+                    box.className = 'match-box';
                     t1El.className = 'team-line';
                     t2El.className = 'team-line';
 
