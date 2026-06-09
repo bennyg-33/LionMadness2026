@@ -6,28 +6,32 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #050505; color: #fff; font-family: 'Oswald', sans-serif; text-align: center; margin: 0; padding: 10px; overflow: hidden; }
+    body { background-color: #050505; color: #fff; font-family: 'Oswald', sans-serif; text-align: center; margin: 0; overflow: hidden; }
     .gold-text { color: #D4AF37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); text-transform: uppercase; letter-spacing: 4px; margin: 5px 0; }
     .blood-text { color: #8A0303; text-shadow: 0 0 10px rgba(138, 3, 3, 0.8); }
     
-    /* Active Matchup View */
-    #matchup-view { margin-top: 5vh; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; background: rgba(5,5,5,0.95); opacity: 0; pointer-events: none; transition: opacity 1s; }
+    /* Overlay Arena View */
+    #matchup-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; background: rgba(5,5,5,0.95); opacity: 0; pointer-events: none; transition: opacity 0.8s; display: flex; flex-direction: column; justify-content: center; }
     #matchup-view.visible { opacity: 1; pointer-events: all; }
-    .matchup-container { display: flex; justify-content: space-around; align-items: center; margin-top: 5vh; padding: 0 5%; }
+    .matchup-container { display: flex; justify-content: space-around; align-items: center; padding: 0 5%; margin-top: 20px;}
     
     .competitor { font-size: 3em; font-weight: 700; background: linear-gradient(145deg, #111, #000); padding: 30px; border-radius: 10px; width: 35%; border: 2px solid #333; box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); text-transform: uppercase; transition: 0.5s; }
-    .competitor.winner-highlight { border-color: #D4AF37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.8); transform: scale(1.05); }
+    .competitor.winner-highlight { border-color: #D4AF37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.8); transform: scale(1.05); z-index: 60;}
     .competitor img { width: 100%; height: 350px; object-fit: cover; border-radius: 5px; margin-bottom: 15px; border: 2px solid #222; }
     
-    /* Full Bracket View */
-    #bracket-view { display: flex; flex-direction: column; height: 95vh; position: relative; }
-    .bracket-arena { display: flex; justify-content: space-between; width: 100%; height: 100%; margin-top: 10px; transform-origin: center center; }
+    /* Bracket View and Zoom Wrapper */
+    #zoom-wrapper { width: 100vw; height: 100vh; position: relative; will-change: transform; transform-origin: center center;}
+    
+    #first-four-bar { display: flex; justify-content: center; gap: 15px; background: #0a0a0a; border-bottom: 2px solid #D4AF37; padding: 10px; }
+    #first-four-bar .match-box { width: 18vw; font-size: 0.8vw; margin-bottom: 0; }
+    
+    #bracket-arena { display: flex; justify-content: space-between; width: 98vw; height: 85vh; margin: 10px auto 0 auto; }
     .bracket-half { display: flex; width: 42%; justify-content: space-between; }
     .bracket-half.right { flex-direction: row-reverse; }
-    .round-col { display: flex; flex-direction: column; justify-content: space-around; flex: 1; margin: 0 5px; }
+    .round-col { display: flex; flex-direction: column; justify-content: space-around; flex: 1; margin: 0 3px; }
     
-    .match-box { background: #111; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 0.8vw; text-transform: uppercase; position: relative; }
-    .match-box.active-match { border-color: #D4AF37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); z-index: 10; }
+    .match-box { background: #111; border: 1px solid #444; border-radius: 4px; padding: 3px; font-size: 0.75vw; text-transform: uppercase; position: relative; margin-bottom: 5px;}
+    .match-box.active-match { border-color: #D4AF37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.8); z-index: 10; }
     .match-box.completed { border-color: #D4AF37; opacity: 0.8; }
     
     .team-line { display: flex; align-items: center; border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; }
@@ -46,10 +50,18 @@
   <audio id="bg-music" loop src="bg-music.mp3"></audio>
   <audio id="cheer-sfx" src="cheer.mp3"></audio>
 
-  <!-- BRACKET VIEW (Base Layer) -->
-  <div id="bracket-view">
-      <h1 class="gold-text" style="font-size: 2.5em; margin:0; z-index: 20;">LION MADNESS '26</h1>
-      <div class="bracket-arena" id="bracket-arena">
+  <!-- BRACKET VIEW (Base Layer inside Zoom Wrapper) -->
+  <div id="zoom-wrapper">
+      <h1 class="gold-text" style="font-size: 2em; margin: 5px 0;">LION MADNESS '26</h1>
+      
+      <!-- FIRST FOUR UI -->
+      <div id="first-four-bar">
+          <div style="color:#D4AF37; font-size:1.2vw; align-self:center; font-weight:bold;">FIRST FOUR<br>PLAY-IN</div>
+          <div id="ff-matches" style="display:flex; gap:10px;"></div>
+      </div>
+
+      <!-- MAIN BRACKET GRID -->
+      <div id="bracket-arena">
           <div class="bracket-half left" id="left-half"></div>
           <div class="center-stage" id="center-stage"></div>
           <div class="bracket-half right" id="right-half"></div>
@@ -58,7 +70,7 @@
 
   <!-- MATCHUP VIEW (Overlay Layer) -->
   <div id="matchup-view">
-      <h1 class="gold-text" style="font-size: 4em; margin-top: 20px;" id="arena-title">DOMINATION ARENA</h1>
+      <h1 class="gold-text" style="font-size: 4em; margin: 0;" id="arena-title">DOMINATION ARENA</h1>
       <div class="matchup-container">
         <div id="active-t1" class="competitor">
             <img id="img-active-t1" src="">
@@ -84,18 +96,25 @@
     }
 
     // Bracket DOM Generation
+    function generateMatchBox(i) {
+        return `<div class="match-box" id="match-${i}">
+            <div class="team-line" id="m${i}-t1-box"><img src="" class="team-avatar" id="m${i}-t1-img"><span id="m${i}-t1-name"></span></div>
+            <div class="team-line" id="m${i}-t2-box" style="border:none; margin:0; padding:0;"><img src="" class="team-avatar" id="m${i}-t2-img"><span id="m${i}-t2-name"></span></div>
+        </div>`;
+    }
+
     function generateColumn(startIdx, endIdx) {
         let col = document.createElement('div');
         col.className = 'round-col';
-        for(let i=startIdx; i<=endIdx; i++) {
-            col.innerHTML += `<div class="match-box" id="match-${i}">
-                <div class="team-line" id="m${i}-t1-box"><img src="" class="team-avatar" id="m${i}-t1-img"><span id="m${i}-t1-name"></span></div>
-                <div class="team-line" id="m${i}-t2-box" style="border:none; margin:0; padding:0;"><img src="" class="team-avatar" id="m${i}-t2-img"><span id="m${i}-t2-name"></span></div>
-            </div>`;
-        }
+        for(let i=startIdx; i<=endIdx; i++) col.innerHTML += generateMatchBox(i);
         return col;
     }
 
+    // First Four
+    let ffContainer = document.getElementById('ff-matches');
+    for(let i=0; i<=3; i++) ffContainer.innerHTML += generateMatchBox(i);
+
+    // Main Bracket
     document.getElementById('left-half').append(generateColumn(4, 19), generateColumn(36, 43), generateColumn(52, 55), generateColumn(60, 61));
     document.getElementById('right-half').append(generateColumn(20, 35), generateColumn(44, 51), generateColumn(56, 59), generateColumn(62, 63));
     document.getElementById('center-stage').innerHTML = `
@@ -106,24 +125,40 @@
         <div class="center-match" id="match-66" style="border-color:#8A0303; padding:20px;"><div class="team-line"><img src="" class="team-avatar" id="m66-t1-img"><span id="m66-t1-name"></span></div><div class="team-line" style="border:none;"><img src="" class="team-avatar" id="m66-t2-img"><span id="m66-t2-name"></span></div></div>
     `;
 
-    // Zoom Logic
-    const arena = document.getElementById('bracket-arena');
+    // Rewritten Flawless Zoom Logic
+    const zoomWrapper = document.getElementById('zoom-wrapper');
     function zoomToMatch(matchId) {
         const matchEl = document.getElementById(`match-${matchId}`);
-        if(!matchEl || matchId < 4) return; // Don't zoom for first 4
+        if(!matchEl) return;
         
-        arena.style.transition = 'none'; arena.style.transform = 'none'; void arena.offsetWidth; // Reset & reflow
+        // 1. Reset scale to get perfect native browser coordinates
+        zoomWrapper.style.transition = 'none'; 
+        zoomWrapper.style.transform = 'translate(0px, 0px) scale(1)';
+        void zoomWrapper.offsetWidth; // Force CSS flush
+        
+        // 2. Find exact center of the specific matchup box
         const rect = matchEl.getBoundingClientRect();
-        const moveX = (window.innerWidth / 2) - (rect.left + rect.width / 2);
-        const moveY = (window.innerHeight / 2) - (rect.top + rect.height / 2);
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
         
-        arena.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
-        arena.style.transform = `translate(${moveX}px, ${moveY}px) scale(3.5)`;
+        // 3. Find the exact center of the TV Screen
+        const screenCenterX = window.innerWidth / 2;
+        const screenCenterY = window.innerHeight / 2;
+        
+        // 4. Set the origin of the transform exactly to the box
+        zoomWrapper.style.transformOrigin = `${centerX}px ${centerY}px`;
+        
+        // 5. Shift the container so the origin lands on the screen center, THEN scale up!
+        const moveX = screenCenterX - centerX;
+        const moveY = screenCenterY - centerY;
+        
+        zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        zoomWrapper.style.transform = `translate(${moveX}px, ${moveY}px) scale(3.5)`;
     }
     
     function zoomOut() {
-        arena.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
-        arena.style.transform = `translate(0px, 0px) scale(1)`;
+        zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        zoomWrapper.style.transform = `translate(0px, 0px) scale(1)`;
     }
 
     let lastPhase = "";
@@ -135,46 +170,42 @@
         
         const activeMatch = data.matches[data.currentMatchId];
 
-        // Fill Bracket Text and Images
+        // Fill Bracket Text and Images (Now loops from 0 so First Four is included!)
         data.matches.forEach((m, i) => {
-            if(i >= 4) {
-                let box = document.getElementById(`match-${i}`);
-                if(box) {
-                    document.getElementById(`m${i}-t1-name`).innerText = m.t1;
-                    document.getElementById(`m${i}-t1-img`).src = getImageUrl(m.t1);
-                    document.getElementById(`m${i}-t2-name`).innerText = m.t2;
-                    document.getElementById(`m${i}-t2-img`).src = getImageUrl(m.t2);
-                    
-                    box.className = 'match-box';
-                    document.getElementById(`m${i}-t1-box`).classList.remove('winner-text');
-                    document.getElementById(`m${i}-t2-box`).classList.remove('winner-text');
+            let box = document.getElementById(`match-${i}`);
+            if(box) {
+                document.getElementById(`m${i}-t1-name`).innerText = m.t1;
+                document.getElementById(`m${i}-t1-img`).src = getImageUrl(m.t1);
+                document.getElementById(`m${i}-t2-name`).innerText = m.t2;
+                document.getElementById(`m${i}-t2-img`).src = getImageUrl(m.t2);
+                
+                box.className = 'match-box';
+                document.getElementById(`m${i}-t1-box`).classList.remove('winner-text');
+                document.getElementById(`m${i}-t2-box`).classList.remove('winner-text');
 
-                    if (i === data.currentMatchId) box.classList.add('active-match');
-                    if (m.winner) {
-                        box.classList.add('completed');
-                        if(m.winner === m.t1) document.getElementById(`m${i}-t1-box`).classList.add('winner-text');
-                        if(m.winner === m.t2) document.getElementById(`m${i}-t2-box`).classList.add('winner-text');
-                    }
+                if (i === data.currentMatchId) box.classList.add('active-match');
+                if (m.winner) {
+                    box.classList.add('completed');
+                    if(m.winner === m.t1) document.getElementById(`m${i}-t1-box`).classList.add('winner-text');
+                    if(m.winner === m.t2) document.getElementById(`m${i}-t2-box`).classList.add('winner-text');
                 }
             }
         });
 
-        // Phase Transition Logic (Cinematics)
+        // Phase Transition Cinematics
         if (data.phase !== lastPhase || data.currentMatchId !== lastMatchId) {
             
             if(data.phase === "BRACKET") {
                 document.getElementById('matchup-view').classList.remove('visible');
-                // Effect: Start zoomed in on previous match, then zoom out to show progress
                 if (lastPhase === "REVEAL") {
                     zoomToMatch(lastMatchId);
-                    setTimeout(() => zoomOut(), 200); 
+                    setTimeout(() => zoomOut(), 300); 
                 } else {
                     zoomOut();
                 }
             }
             
             if(data.phase === "VOTING") {
-                // Populate big arena cards
                 document.getElementById('name-active-t1').innerText = activeMatch.t1;
                 document.getElementById('img-active-t1').src = getImageUrl(activeMatch.t1);
                 document.getElementById('name-active-t2').innerText = activeMatch.t2;

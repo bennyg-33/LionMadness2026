@@ -16,7 +16,6 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 
 // --- IMAGE DICTIONARY ---
-// Populated with public domain / Wikipedia Commons images
 const contestantImages = {
     "Bernie Madoff": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bernard_Madoff.jpg/640px-Bernard_Madoff.jpg",
     "Ye": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Kanye_West_at_the_2009_Tribeca_Film_Festival-2_%28cropped%29.jpg/640px-Kanye_West_at_the_2009_Tribeca_Film_Festival-2_%28cropped%29.jpg",
@@ -67,17 +66,19 @@ const contestantImages = {
     "The Rock.Ai": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2%2C_2013.jpg/640px-Dwayne_Johnson_2%2C_2013.jpg"
 };
 
-// Fallback image generator if no custom URL is provided
+// Robust Fallback Image Generator
 function getImageUrl(name) {
-    if (contestantImages[name]) return contestantImages[name];
-    if (!name || name.includes("Waiting") || name.includes("TBD")) {
-         // Return a transparent 1x1 pixel or a solid dark placeholder
+    if (!name) return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    let cleanName = name.trim();
+    if (contestantImages[cleanName]) return contestantImages[cleanName];
+    if (cleanName.includes("Waiting") || cleanName.includes("TBD")) {
          return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
-    // Generates a simple geometric pattern based on the name
-    return `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(name)}&backgroundColor=111111`;
+    // Reliable 100% uptime fallback
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=111&color=D4AF37&size=128&bold=true`;
 }
 
+// Map over the array to trim invisible trailing spaces from the CSV!
 const rawCompetitors = [
   "Bernie Madoff", "Choo-Beng", "Diddy", "Bibi", "Jordan Belfort", "Laura C", "Bill Cosby", "Joseph Stalin", 
   "Luigi Mangione", "Mommy I", "Ye", "Saddam Hussein", "Osama Bin Laden", "Bart S", "R Kelly", "Malcom X", 
@@ -88,7 +89,7 @@ const rawCompetitors = [
   "El Chapo", "Joe U", "Mel Gibson", "George Washington", "Ghislane Maxwell", "Jason W", "Karl Malone", "King Leopold", 
   "Peter Thiel", "McKenzie Maher", "Magic Johnson", "Dick Cheney", "Erica Kirk", "JC Yang", "Ozzy Osborne", "Robert E Lee", 
   "Charles Manson", "The Rock.Ai", "50 Cent", "Andrew Jackson"
-];
+].map(name => name.trim());
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -113,7 +114,7 @@ function initializeTournament() {
   for(let i=0; i<4; i++) { matches[i+60].nextMatch = 64 + Math.floor(i/2); matches[i+60].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<2; i++) { matches[i+64].nextMatch = 66; matches[i+64].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
 
-  // Initial Seedings
+  // Initial Seedings for First Four
   for(let i=0; i<4; i++) {
       matches[i].t1 = randomized[i*2];
       matches[i].t2 = randomized[i*2 + 1];
@@ -121,6 +122,7 @@ function initializeTournament() {
       matches[i].nextSlot = 't2';
   }
 
+  // Seed Main Bracket
   let remainingTeams = randomized.slice(8);
   let teamIdx = 0;
   for(let i=4; i<36; i++) {
@@ -134,7 +136,7 @@ function initializeTournament() {
   }
 
   db.ref('tournament').set({
-    phase: "BRACKET", // Phases: BRACKET, VOTING, REVEAL
+    phase: "BRACKET", 
     currentMatchId: 0,
     matches: matches,
     votes: null
@@ -142,6 +144,5 @@ function initializeTournament() {
     alert("ALPHA BRACKET GENERATED AND SYNCED.");
   }).catch((error) => {
     console.error("Error generating bracket: ", error);
-    alert("Error saving to Firebase. Check console.");
   });
 }

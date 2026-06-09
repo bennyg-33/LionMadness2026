@@ -19,7 +19,6 @@
     #match-info { color: #aaa; margin-top: 10px; font-size: 1.2em; }
     .tally { font-size: 2em; color: #D4AF37; margin: 20px 0; font-weight: bold; }
     
-    /* Host controls hidden by default to keep player screen clean */
     #host-controls { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; margin-top: 30px; }
   </style>
 </head>
@@ -59,7 +58,6 @@
 
   <script src="logic.js"></script>
   <script>
-    // Generate a unique ID for this specific phone/voter
     let myVoterId = localStorage.getItem('lion_voter_id');
     if(!myVoterId) {
         myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9);
@@ -79,17 +77,14 @@
 
          document.getElementById('match-info').innerText = `MATCH ${currentData.currentMatchId + 1} / 67 | ${currentMatch.t1} vs ${currentMatch.t2}`;
 
-         // View Management based on Phase
          document.getElementById('view-bracket').style.display = currentData.phase === "BRACKET" ? "block" : "none";
          document.getElementById('view-voting').style.display = currentData.phase === "VOTING" ? "block" : "none";
          document.getElementById('view-reveal').style.display = currentData.phase === "REVEAL" ? "block" : "none";
 
-         // Host Buttons Management
          document.getElementById('btn-start-match').style.display = currentData.phase === "BRACKET" ? "block" : "none";
          document.getElementById('btn-confirm-winner').style.display = currentData.phase === "VOTING" ? "block" : "none";
          document.getElementById('btn-next-match').style.display = currentData.phase === "REVEAL" ? "block" : "none";
 
-         // Update Voting UI
          if(currentData.phase === "VOTING") {
              document.getElementById('btn-t1').innerText = currentMatch.t1;
              document.getElementById('btn-t2').innerText = currentMatch.t2;
@@ -143,7 +138,6 @@
         if(t1Count === t2Count) { alert("It's a tie! Someone change their vote."); return; }
 
         if(confirm(`Majority selects ${winnerName}. Lock it in?`)) {
-            // Save winner and forward to next round slot
             db.ref(`tournament/matches/${currentMatch.id}/winner`).set(winnerName);
             if(currentMatch.nextMatch !== undefined) {
                 db.ref(`tournament/matches/${currentMatch.nextMatch}/${currentMatch.nextSlot}`).set(winnerName);
@@ -157,7 +151,7 @@
             db.ref('tournament').update({
                 currentMatchId: currentMatch.id + 1,
                 phase: 'BRACKET',
-                votes: null // Clear votes for next match
+                votes: null
             });
         } else {
             alert(`TOURNAMENT COMPLETE!`);
