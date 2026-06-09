@@ -11,31 +11,34 @@
     .blood-text { color: #8A0303; text-shadow: 0 0 10px rgba(138, 3, 3, 0.8); }
     
     /* Active Matchup View */
-    #matchup-view { margin-top: 15vh; }
-    .matchup-container { display: flex; justify-content: space-around; align-items: center; margin-top: 5vh; }
-    .competitor { font-size: 5em; font-weight: 700; background: linear-gradient(145deg, #111, #000); padding: 50px; border-radius: 10px; width: 35%; border: 2px solid #D4AF37; box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); text-transform: uppercase; }
+    #matchup-view { margin-top: 5vh; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; background: rgba(5,5,5,0.95); opacity: 0; pointer-events: none; transition: opacity 1s; }
+    #matchup-view.visible { opacity: 1; pointer-events: all; }
+    .matchup-container { display: flex; justify-content: space-around; align-items: center; margin-top: 5vh; padding: 0 5%; }
+    
+    .competitor { font-size: 3em; font-weight: 700; background: linear-gradient(145deg, #111, #000); padding: 30px; border-radius: 10px; width: 35%; border: 2px solid #333; box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); text-transform: uppercase; transition: 0.5s; }
+    .competitor.winner-highlight { border-color: #D4AF37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.8); transform: scale(1.05); }
+    .competitor img { width: 100%; height: 350px; object-fit: cover; border-radius: 5px; margin-bottom: 15px; border: 2px solid #222; }
     
     /* Full Bracket View */
-    #bracket-view { display: flex; flex-direction: column; height: 95vh; }
-    .bracket-arena { display: flex; justify-content: space-between; width: 100%; height: 100%; margin-top: 10px; }
+    #bracket-view { display: flex; flex-direction: column; height: 95vh; position: relative; }
+    .bracket-arena { display: flex; justify-content: space-between; width: 100%; height: 100%; margin-top: 10px; transform-origin: center center; }
     .bracket-half { display: flex; width: 42%; justify-content: space-between; }
     .bracket-half.right { flex-direction: row-reverse; }
     .round-col { display: flex; flex-direction: column; justify-content: space-around; flex: 1; margin: 0 5px; }
     
     .match-box { background: #111; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 0.8vw; text-transform: uppercase; position: relative; }
-    .match-box.active-match { border-color: #8A0303; background: #220000; box-shadow: 0 0 15px #8A0303; z-index: 10; transform: scale(1.1); transition: 0.3s;}
-    .match-box.completed { border-color: #D4AF37; opacity: 0.7; }
-    .team-line { border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .match-box.active-match { border-color: #D4AF37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); z-index: 10; }
+    .match-box.completed { border-color: #D4AF37; opacity: 0.8; }
+    
+    .team-line { display: flex; align-items: center; border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; }
+    .team-avatar { width: 1.5vw; height: 1.5vw; border-radius: 50%; margin-right: 8px; object-fit: cover; border: 1px solid #D4AF37; }
     .winner-text { color: #D4AF37; font-weight: bold; }
     
     .center-stage { width: 15%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
-    .center-match { width: 100%; background: #111; border: 2px solid #D4AF37; padding: 10px; font-size: 1vw; text-align: center; }
+    .center-match { width: 100%; background: #111; border: 2px solid #D4AF37; padding: 10px; font-size: 1vw; text-align: left; }
 
-    /* Controls */
     .audio-controls { position: fixed; bottom: 10px; right: 10px; display: flex; gap: 10px; z-index: 100; }
-    button { background: #111; color: #D4AF37; border: 1px solid #D4AF37; padding: 10px 15px; font-family: 'Oswald'; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-    button:hover { background: #D4AF37; color: #000; }
-    button.muted { color: #8A0303; border-color: #8A0303; }
+    button { background: #111; color: #D4AF37; border: 1px solid #D4AF37; padding: 10px 15px; font-family: 'Oswald'; cursor: pointer; text-transform: uppercase; }
   </style>
 </head>
 <body>
@@ -43,180 +46,163 @@
   <audio id="bg-music" loop src="bg-music.mp3"></audio>
   <audio id="cheer-sfx" src="cheer.mp3"></audio>
 
-  <div id="matchup-view" style="display: none;">
-      <h1 class="gold-text" style="font-size: 3em;">DOMINATION ARENA</h1>
-      <div class="matchup-container">
-        <div id="active-t1" class="competitor">TBD</div>
-        <div class="blood-text" style="font-size: 5em; font-style: italic;">VS</div>
-        <div id="active-t2" class="competitor">TBD</div>
-      </div>
-  </div>
-
+  <!-- BRACKET VIEW (Base Layer) -->
   <div id="bracket-view">
-      <h1 class="gold-text" style="font-size: 2.5em; margin:0;">LION MADNESS '26</h1>
-      <div class="bracket-arena">
+      <h1 class="gold-text" style="font-size: 2.5em; margin:0; z-index: 20;">LION MADNESS '26</h1>
+      <div class="bracket-arena" id="bracket-arena">
           <div class="bracket-half left" id="left-half"></div>
           <div class="center-stage" id="center-stage"></div>
           <div class="bracket-half right" id="right-half"></div>
       </div>
   </div>
 
+  <!-- MATCHUP VIEW (Overlay Layer) -->
+  <div id="matchup-view">
+      <h1 class="gold-text" style="font-size: 4em; margin-top: 20px;" id="arena-title">DOMINATION ARENA</h1>
+      <div class="matchup-container">
+        <div id="active-t1" class="competitor">
+            <img id="img-active-t1" src="">
+            <div id="name-active-t1">TBD</div>
+        </div>
+        <div class="blood-text" style="font-size: 5em; font-style: italic; z-index: 10;">VS</div>
+        <div id="active-t2" class="competitor">
+            <img id="img-active-t2" src="">
+            <div id="name-active-t2">TBD</div>
+        </div>
+      </div>
+  </div>
+
   <div class="audio-controls">
-      <button id="btn-bgm" onclick="toggleBGM()">🔊 BGM: ON</button>
-      <button id="btn-sfx" onclick="toggleSFX()">🔊 SFX: ON</button>
+      <button id="btn-bgm" onclick="toggleBGM()">🔊 BGM</button>
   </div>
 
   <script src="logic.js"></script>
   <script>
-    let sfxEnabled = true;
-    let currentStage = ""; 
-
-    // --- AUDIO INFRASTRUCTURE UPGRADE ---
-    
-    // 1. Map out the background music for each stage
-    const bgmTracks = {
-        "FIRST_FOUR": "bg-firstfour.mp3", // Matches 0-3
-        "ROUND_64": "bg-r64.mp3",         // Matches 4-35
-        "ROUND_32": "bg-r32.mp3",         // Matches 36-51
-        "SWEET_16": "bg-s16.mp3",         // Matches 52-59
-        "ELITE_8": "bg-e8.mp3",           // Matches 60-63
-        "FINAL_4": "bg-f4.mp3",           // Matches 64-65
-        "CHAMPIONSHIP": "bg-champ.mp3"    // Match 66
-    };
-
-    function determineStage(matchId) {
-        if (matchId <= 3) return "FIRST_FOUR";
-        if (matchId <= 35) return "ROUND_64";
-        if (matchId <= 51) return "ROUND_32";
-        if (matchId <= 59) return "SWEET_16";
-        if (matchId <= 63) return "ELITE_8";
-        if (matchId <= 65) return "FINAL_4";
-        return "CHAMPIONSHIP";
-    }
-
     function toggleBGM() {
         const bgm = document.getElementById('bg-music');
-        const btn = document.getElementById('btn-bgm');
-        if(bgm.paused || bgm.muted) { bgm.muted = false; bgm.play(); btn.innerText = "🔊 BGM: ON"; btn.classList.remove('muted'); } 
-        else { bgm.muted = true; btn.innerText = "🔇 BGM: MUTED"; btn.classList.add('muted'); }
+        if(bgm.paused) { bgm.play(); } else { bgm.pause(); }
     }
 
-    function toggleSFX() {
-        const btn = document.getElementById('btn-sfx');
-        sfxEnabled = !sfxEnabled;
-        if(sfxEnabled) { btn.innerText = "🔊 SFX: ON"; btn.classList.remove('muted'); } 
-        else { btn.innerText = "🔇 SFX: MUTED"; btn.classList.add('muted'); }
-    }
-
-    // 2. Dynamic SFX Player based on Winner Name
-    function playWinnerSFX(winnerName) {
-        if(!sfxEnabled) return;
-
-        // Try to load a custom sound matching the winner's name exactly 
-        // Example: "Bernie Madoff.mp3"
-        let sfx = new Audio(`${winnerName}.mp3`);
-        
-        sfx.play().catch(e => {
-            // If the custom file doesn't exist (404), fall back to the default alpha cheer
-            console.log(`No custom sound for ${winnerName}. Playing default.`);
-            let defaultSfx = document.getElementById('cheer-sfx');
-            defaultSfx.currentTime = 0;
-            defaultSfx.play().catch(err => console.log(err));
-        });
-    }
-
-    // Bracket DOM Generation (Unchanged)
+    // Bracket DOM Generation
     function generateColumn(startIdx, endIdx) {
         let col = document.createElement('div');
         col.className = 'round-col';
         for(let i=startIdx; i<=endIdx; i++) {
             col.innerHTML += `<div class="match-box" id="match-${i}">
-                <div class="team-line" id="m${i}-t1"></div>
-                <div class="team-line" id="m${i}-t2" style="border:none; margin:0; padding:0;"></div>
+                <div class="team-line" id="m${i}-t1-box"><img src="" class="team-avatar" id="m${i}-t1-img"><span id="m${i}-t1-name"></span></div>
+                <div class="team-line" id="m${i}-t2-box" style="border:none; margin:0; padding:0;"><img src="" class="team-avatar" id="m${i}-t2-img"><span id="m${i}-t2-name"></span></div>
             </div>`;
         }
         return col;
     }
 
-    document.getElementById('left-half').append(
-        generateColumn(4, 19), generateColumn(36, 43), generateColumn(52, 55), generateColumn(60, 61)
-    );
-    document.getElementById('right-half').append(
-        generateColumn(20, 35), generateColumn(44, 51), generateColumn(56, 59), generateColumn(62, 63)
-    );
+    document.getElementById('left-half').append(generateColumn(4, 19), generateColumn(36, 43), generateColumn(52, 55), generateColumn(60, 61));
+    document.getElementById('right-half').append(generateColumn(20, 35), generateColumn(44, 51), generateColumn(56, 59), generateColumn(62, 63));
     document.getElementById('center-stage').innerHTML = `
         <h3 class="gold-text" style="margin:0;">FINAL FOUR</h3>
-        <div class="center-match" id="match-64"><div id="m64-t1"></div><div id="m64-t2"></div></div>
-        <div class="center-match" id="match-65"><div id="m65-t1"></div><div id="m65-t2"></div></div>
+        <div class="center-match" id="match-64"><div class="team-line"><img src="" class="team-avatar" id="m64-t1-img"><span id="m64-t1-name"></span></div><div class="team-line" style="border:none;"><img src="" class="team-avatar" id="m64-t2-img"><span id="m64-t2-name"></span></div></div>
+        <div class="center-match" id="match-65"><div class="team-line"><img src="" class="team-avatar" id="m65-t1-img"><span id="m65-t1-name"></span></div><div class="team-line" style="border:none;"><img src="" class="team-avatar" id="m65-t2-img"><span id="m65-t2-name"></span></div></div>
         <h2 class="blood-text" style="margin:20px 0 0 0;">CHAMPIONSHIP</h2>
-        <div class="center-match" id="match-66" style="border-color:#8A0303; padding:20px;"><div id="m66-t1"></div><div id="m66-t2"></div></div>
+        <div class="center-match" id="match-66" style="border-color:#8A0303; padding:20px;"><div class="team-line"><img src="" class="team-avatar" id="m66-t1-img"><span id="m66-t1-name"></span></div><div class="team-line" style="border:none;"><img src="" class="team-avatar" id="m66-t2-img"><span id="m66-t2-name"></span></div></div>
     `;
 
+    // Zoom Logic
+    const arena = document.getElementById('bracket-arena');
+    function zoomToMatch(matchId) {
+        const matchEl = document.getElementById(`match-${matchId}`);
+        if(!matchEl || matchId < 4) return; // Don't zoom for first 4
+        
+        arena.style.transition = 'none'; arena.style.transform = 'none'; void arena.offsetWidth; // Reset & reflow
+        const rect = matchEl.getBoundingClientRect();
+        const moveX = (window.innerWidth / 2) - (rect.left + rect.width / 2);
+        const moveY = (window.innerHeight / 2) - (rect.top + rect.height / 2);
+        
+        arena.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        arena.style.transform = `translate(${moveX}px, ${moveY}px) scale(3.5)`;
+    }
+    
+    function zoomOut() {
+        arena.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        arena.style.transform = `translate(0px, 0px) scale(1)`;
+    }
+
+    let lastPhase = "";
     let lastMatchId = -1;
 
     db.ref('tournament').on('value', (snapshot) => {
       const data = snapshot.val();
       if(data && data.matches) {
         
-        document.getElementById('matchup-view').style.display = data.view === "MATCHUP" ? 'block' : 'none';
-        document.getElementById('bracket-view').style.display = data.view === "BRACKET" ? 'flex' : 'none';
+        const activeMatch = data.matches[data.currentMatchId];
 
-        // --- STAGE & BGM CHECK ---
-        let newStage = determineStage(data.currentMatchId);
-        if(newStage !== currentStage) {
-            currentStage = newStage;
-            let bgmPlayer = document.getElementById('bg-music');
-            
-            // Check if we have a track mapped for this stage. If so, swap and play.
-            if(bgmTracks[newStage]) {
-                bgmPlayer.src = bgmTracks[newStage];
-                // Only auto-play if the user hasn't explicitly muted it
-                if(!bgmPlayer.muted) {
-                    bgmPlayer.play().catch(e => console.log("Waiting for user interaction to play audio."));
-                }
-            }
-        }
-
-        let activeMatch = data.matches[data.currentMatchId];
-        if(activeMatch) {
-            document.getElementById('active-t1').innerText = activeMatch.t1;
-            document.getElementById('active-t2').innerText = activeMatch.t2;
-            
-            // --- CUSTOM SFX CHECK ---
-            // If the match ID advanced, find out who won the previous match and play their sound
-            if(lastMatchId !== -1 && data.currentMatchId > lastMatchId) { 
-                let previousMatch = data.matches[lastMatchId];
-                if(previousMatch && previousMatch.winner) {
-                    playWinnerSFX(previousMatch.winner);
-                }
-            }
-            lastMatchId = data.currentMatchId;
-        }
-
-        // Fill Bracket Data (Unchanged)
+        // Fill Bracket Text and Images
         data.matches.forEach((m, i) => {
             if(i >= 4) {
                 let box = document.getElementById(`match-${i}`);
-                let t1El = document.getElementById(`m${i}-t1`);
-                let t2El = document.getElementById(`m${i}-t2`);
-                
-                if(box && t1El && t2El) {
-                    t1El.innerText = m.t1;
-                    t2El.innerText = m.t2;
+                if(box) {
+                    document.getElementById(`m${i}-t1-name`).innerText = m.t1;
+                    document.getElementById(`m${i}-t1-img`).src = getImageUrl(m.t1);
+                    document.getElementById(`m${i}-t2-name`).innerText = m.t2;
+                    document.getElementById(`m${i}-t2-img`).src = getImageUrl(m.t2);
                     
                     box.className = 'match-box';
-                    t1El.className = 'team-line';
-                    t2El.className = 'team-line';
+                    document.getElementById(`m${i}-t1-box`).classList.remove('winner-text');
+                    document.getElementById(`m${i}-t2-box`).classList.remove('winner-text');
 
                     if (i === data.currentMatchId) box.classList.add('active-match');
                     if (m.winner) {
                         box.classList.add('completed');
-                        if(m.winner === m.t1) t1El.classList.add('winner-text');
-                        if(m.winner === m.t2) t2El.classList.add('winner-text');
+                        if(m.winner === m.t1) document.getElementById(`m${i}-t1-box`).classList.add('winner-text');
+                        if(m.winner === m.t2) document.getElementById(`m${i}-t2-box`).classList.add('winner-text');
                     }
                 }
             }
         });
+
+        // Phase Transition Logic (Cinematics)
+        if (data.phase !== lastPhase || data.currentMatchId !== lastMatchId) {
+            
+            if(data.phase === "BRACKET") {
+                document.getElementById('matchup-view').classList.remove('visible');
+                // Effect: Start zoomed in on previous match, then zoom out to show progress
+                if (lastPhase === "REVEAL") {
+                    zoomToMatch(lastMatchId);
+                    setTimeout(() => zoomOut(), 200); 
+                } else {
+                    zoomOut();
+                }
+            }
+            
+            if(data.phase === "VOTING") {
+                // Populate big arena cards
+                document.getElementById('name-active-t1').innerText = activeMatch.t1;
+                document.getElementById('img-active-t1').src = getImageUrl(activeMatch.t1);
+                document.getElementById('name-active-t2').innerText = activeMatch.t2;
+                document.getElementById('img-active-t2').src = getImageUrl(activeMatch.t2);
+                
+                document.getElementById('active-t1').classList.remove('winner-highlight');
+                document.getElementById('active-t2').classList.remove('winner-highlight');
+                document.getElementById('arena-title').innerText = "VOTING OPEN";
+
+                // Cinematic: Zoom in on bracket, then fade to Arena
+                zoomToMatch(data.currentMatchId);
+                setTimeout(() => {
+                    document.getElementById('matchup-view').classList.add('visible');
+                }, 1500);
+            }
+
+            if(data.phase === "REVEAL") {
+                document.getElementById('arena-title').innerText = "ALPHA CROWNED";
+                let sfx = document.getElementById('cheer-sfx');
+                sfx.currentTime = 0; sfx.play().catch(e=>console.log(e));
+
+                if(activeMatch.winner === activeMatch.t1) document.getElementById('active-t1').classList.add('winner-highlight');
+                else document.getElementById('active-t2').classList.add('winner-highlight');
+            }
+
+            lastPhase = data.phase;
+            lastMatchId = data.currentMatchId;
+        }
       }
     });
   </script>
