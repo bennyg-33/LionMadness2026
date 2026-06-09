@@ -74,7 +74,8 @@ const resolvedImages = {};
 function fetchWikipediaImages() {
     // Wikipedia API allows fetching up to 50 titles per query. We have 47, which is perfect!
     const titles = Object.values(contestantImages).join('|');
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&iiurlwidth=320&format=json&origin=*`;
+    // Removed thumbnail sizing - fetching the original full-sized URLs
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
 
     fetch(url)
         .then(res => res.json())
@@ -86,13 +87,14 @@ function fetchWikipediaImages() {
             // Map the API URLs back to the competitor names
             Object.values(pages).forEach(page => {
                 if (page.imageinfo && page.imageinfo.length > 0) {
-                    const thumbUrl = page.imageinfo[0].thumburl;
+                    // Grab the original full resolution URL instead of the thumbnail
+                    const fullUrl = page.imageinfo[0].url; 
                     const title = page.title; // e.g. "File:Bernard Madoff.jpg"
                     
                     Object.keys(contestantImages).forEach(name => {
                         // Match titles while ignoring spaces vs underscores
                         if (contestantImages[name].replace(/_/g, ' ') === title.replace(/_/g, ' ')) {
-                            resolvedImages[name] = thumbUrl;
+                            resolvedImages[name] = fullUrl;
                         }
                     });
                 }
