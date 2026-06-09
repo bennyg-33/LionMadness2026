@@ -61,15 +61,21 @@ const contestantImages = {
     "Robert E Lee": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Robert_Edward_Lee.jpg/640px-Robert_Edward_Lee.jpg",
     "Charles Manson": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Charles_Manson_1969.jpg/640px-Charles_Manson_1969.jpg",
     "50 Cent": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/50_Cent_2018.jpg/640px-50_Cent_2018.jpg",
-    "Andrew Jackson": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Andrew_Jackson_painter_unknown.jpg/640px-Andrew_Jackson_painter_unknown.jpg"
+    "Andrew Jackson": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Andrew_Jackson_painter_unknown.jpg/640px-Andrew_Jackson_painter_unknown.jpg",
+    "Luigi Mangione": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Luigi_Mangione.jpg/640px-Luigi_Mangione.jpg",
+    "Burger King Guy": "https://upload.wikimedia.org/wikipedia/en/thumb/4/49/The_Burger_King.jpg/220px-The_Burger_King.jpg",
+    "The Rock.Ai": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2%2C_2013.jpg/640px-Dwayne_Johnson_2%2C_2013.jpg"
 };
 
 // Fallback image generator if no custom URL is provided
 function getImageUrl(name) {
     if (contestantImages[name]) return contestantImages[name];
-    if (name.includes("Waiting")) return "https://ui-avatars.com/api/?name=?&background=111&color=fff";
-    // Generates a funny, unique robotic/monster avatar based on their name
-    return `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}&backgroundColor=D4AF37`;
+    if (!name || name.includes("Waiting") || name.includes("TBD")) {
+         // Return a transparent 1x1 pixel or a solid dark placeholder
+         return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    }
+    // Generates a simple geometric pattern based on the name
+    return `https://api.dicebear.com/9.x/identicon/svg?seed=${encodeURIComponent(name)}&backgroundColor=111111`;
 }
 
 const rawCompetitors = [
@@ -132,6 +138,10 @@ function initializeTournament() {
     currentMatchId: 0,
     matches: matches,
     votes: null
+  }).then(() => {
+    alert("ALPHA BRACKET GENERATED AND SYNCED.");
+  }).catch((error) => {
+    console.error("Error generating bracket: ", error);
+    alert("Error saving to Firebase. Check console.");
   });
-  alert("ALPHA BRACKET GENERATED AND SYNCED.");
 }
