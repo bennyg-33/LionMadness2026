@@ -66,19 +66,26 @@ const contestantImages = {
     "The Rock.Ai": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2%2C_2013.jpg/640px-Dwayne_Johnson_2%2C_2013.jpg"
 };
 
-// Robust Fallback Image Generator
+// 100% unbreakable local SVG fallback generator
 function getImageUrl(name) {
     if (!name) return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    
     let cleanName = name.trim();
     if (contestantImages[cleanName]) return contestantImages[cleanName];
     if (cleanName.includes("Waiting") || cleanName.includes("TBD")) {
          return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
-    // Reliable 100% uptime fallback
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=111&color=D4AF37&size=128&bold=true`;
+    
+    // Generates a beautiful customized avatar directly in the browser - no external links!
+    let initial = cleanName.charAt(0).toUpperCase();
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+        <rect width="100" height="100" fill="#111111" stroke="#D4AF37" stroke-width="2"/>
+        <text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-family="Arial, sans-serif" font-size="50" font-weight="bold" fill="#D4AF37">${initial}</text>
+    </svg>`;
+    
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-// Map over the array to trim invisible trailing spaces from the CSV!
 const rawCompetitors = [
   "Bernie Madoff", "Choo-Beng", "Diddy", "Bibi", "Jordan Belfort", "Laura C", "Bill Cosby", "Joseph Stalin", 
   "Luigi Mangione", "Mommy I", "Ye", "Saddam Hussein", "Osama Bin Laden", "Bart S", "R Kelly", "Malcom X", 
