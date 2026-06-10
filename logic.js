@@ -65,6 +65,25 @@ const contestantImages = {
     "Luigi Mangione": "File:Luigi_Mangione.jpg",
     "Burger King Guy": "File:The_Burger_King.jpg",
     "The Rock.Ai": "File:Dwayne_Johnson_2,_2013.jpg"
+	"Bart S": "File:James_Clerk_Maxwell_Statue_Equations.jpg"
+	"Bubba": "File:Bill_Clinton_saxophone_8a9e10f958efc78651fa4c9fb6228e2e_(cropped).jpg" 
+	"Erica Kirk": "File:AmericaFest_2025_-_Erika_Kirk_23_(cropped).jpg" 
+	"Laura C": "File:White_witch_in_battle_for_naria.jpg"
+	"Mike L": "File:Evb-my_hog.jpg"
+	"Stephanie C": "File:Jabba_the_Hutt_in_Return_of_the_Jedi_(1983).png"
+	"The Painter?": "File:Adolf_Hitler_-_06.jpg"
+	"McKenzie Maher": "File:Logo_of_Rohde_&_Schwarz_(2009).svg"
+	"Rusty M": "File:Agriculture_in_Britain-_Life_on_George_Casely's_Farm,_Devon,_England,_1942_D9817.jpg"
+	"AB": "File:Henry_Cejudo_%26_Antonio_Brown_(54235293159).jpg"
+	"Anna S": "File:Kate_Gosselin.jpg"
+	"Mommy I" "File:Asymmetrical_bob_(51210139996).jpg"
+	"JC Yang": "File:Social_Network_Analysis_Visualization.png"
+	"Joe U": "File:Julian_Richings_by_Gage_Skidmore.jpg"
+	"Gene S" "File:Henry_Winkler_Fonzie_1977.JPG" 
+	"Choo-Beng": "File:Herpestes_ichneumon_Египетский_мангуст,_или_фараонова_крыса,_или_ихневмо́н.jpg"
+	"Gary Plauche": "File:Gary_Plauche_shoots_Jeffery_Doucet.jpeg"
+	"Jason W": "File:Abraham-Whistler-Kris-Kristofferson-2004.jpg"
+	"Chuck M": "File:Zahn_McClarnon_by_Gage_Skidmore.jpg" 
 };
 
 // Global cache for the active URLs provided by the API
