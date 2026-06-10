@@ -14,7 +14,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.database();
-
+// Bootleg comment commit
 // --- IMAGE DICTIONARY ---
 // Now using just the Wikipedia File names to fetch via the imageinfo API!
 const contestantImages = {
