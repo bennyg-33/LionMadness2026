@@ -142,22 +142,31 @@
     function zoomToMatch(matchId) {
         const matchEl = document.getElementById(`match-${matchId}`);
         if(!matchEl) return;
-        zoomWrapper.style.transition = 'none'; zoomWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-        zoomWrapper.style.transformOrigin = '0 0'; void zoomWrapper.offsetWidth; 
         
-        const wrapperRect = zoomWrapper.getBoundingClientRect();
-        const matchRect = matchEl.getBoundingClientRect();
-        const centerX = (matchRect.left - wrapperRect.left) + (matchRect.width / 2);
-        const centerY = (matchRect.top - wrapperRect.top) + (matchRect.height / 2);
-        const scale = 3.5;
-        const translateX = (window.innerWidth / 2) - (centerX * scale);
-        const translateY = (window.innerHeight / 2) - (centerY * scale);
+        // 1. Strip transition and fix origin to top-left (0,0) immediately
+        zoomWrapper.style.transition = 'none'; 
+        zoomWrapper.style.transform = 'translate(0px, 0px) scale(1)';
+        zoomWrapper.style.transformOrigin = '0 0';
         
-        requestAnimationFrame(() => { requestAnimationFrame(() => {
+        // 2. Give the browser a tiny 50ms window to fully flush the layout reset
+        setTimeout(() => {
+            const wrapperRect = zoomWrapper.getBoundingClientRect();
+            const matchRect = matchEl.getBoundingClientRect();
+            
+            const centerX = (matchRect.left - wrapperRect.left) + (matchRect.width / 2);
+            const centerY = (matchRect.top - wrapperRect.top) + (matchRect.height / 2);
+            
+            // Calculate pan distance
+            const scale = 3.5;
+            const translateX = (window.innerWidth / 2) - (centerX * scale);
+            const translateY = (window.innerHeight / 2) - (centerY * scale);
+            
+            // Fire the zoom smoothly
             zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
             zoomWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-        });});
+        }, 50);
     }
+    
     function zoomOut() {
         zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
         zoomWrapper.style.transform = `translate(0px, 0px) scale(1)`;
@@ -188,7 +197,8 @@
             if(m.t1.includes("Waiting") || m.t2.includes("Waiting")) { alert("Cannot start. Waiting on previous matches."); return; }
             db.ref('tournament/phase').set("VOTING");
         } else if (globalState.phase === "REVEAL") {
-            db.ref('tournament').update({ currentMatchId: globalState.currentMatchId + 1, phase: "BRACKET", votes: null });
+            // Disabled manual click here! The new Auto-Loop handles this completely.
+            console.log("Auto-advancing currently engaged...");
         } else if (globalState.phase === "CHAMPION_CELEBRATION") {
             db.ref('tournament/phase').set("PATH_HIGHLIGHT");
         }
@@ -216,7 +226,7 @@
           actionBtn.innerText = "ZOOM IN & START VOTE"; 
           document.getElementById('main-title').innerText = "LION MADNESS '26";
       } else if(data.phase === "REVEAL") {
-          actionBtn.innerText = "NEXT MATCH";
+          actionBtn.innerText = "AUTO-ADVANCING...";
       } else if(data.phase === "CHAMPION_CELEBRATION") {
           actionBtn.innerText = "SHOW GLORY PATH";
       } else {
@@ -274,8 +284,23 @@
               db.ref(`tournament/matches/${activeMatch.id}/winner`).set(winner);
               if(activeMatch.nextMatch !== undefined) db.ref(`tournament/matches/${activeMatch.nextMatch}/${activeMatch.nextSlot}`).set(winner);
               
-              if(activeMatch.id === 66) db.ref('tournament/phase').set('CHAMPION_CELEBRATION');
-              else db.ref('tournament/phase').set('REVEAL');
+              if(activeMatch.id === 66) {
+                  db.ref('tournament/phase').set('CHAMPION_CELEBRATION');
+              } else {
+                  db.ref('tournament/phase').set('REVEAL');
+                  
+                  // THE AUTO-ADVANCEMENT LOOP
+                  // 1. Wait 5 seconds in REVEAL phase to celebrate winner
+                  setTimeout(() => {
+                      db.ref('tournament').update({ currentMatchId: data.currentMatchId + 1, phase: "BRACKET", votes: null });
+                      
+                      // 2. Wait 4 seconds in BRACKET phase to show the updated board, then auto-zoom to next vote!
+                      setTimeout(() => {
+                          db.ref('tournament/phase').set('VOTING');
+                      }, 4000);
+                      
+                  }, 5000);
+              }
               
               setTimeout(() => { calculatingWinner = false; }, 2000);
           }
