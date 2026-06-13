@@ -67,18 +67,17 @@
   <audio id="bg-music" loop src="bg-music.mp3"></audio>
   <audio id="cheer-sfx" src="cheer.mp3"></audio>
 
-  <!-- THE MISSING UI CONTAINERS! (These caused the crash) -->
+  <!-- Live Committee Panel -->
   <div id="committee-panel" style="position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 100;"></div>
 
+  <!-- Championship Celebration Overlay -->
   <div id="champion-screen" class="champ-overlay">
       <h1 class="gold-text" style="font-size: 6em;">TOURNAMENT CHAMPION</h1>
       <img id="champ-img" src="">
       <h2 id="champ-name" class="gold-text" style="font-size: 4em;"></h2>
   </div>
-  <!-- END MISSING UI -->
 
   <div id="zoom-wrapper">
-      <!-- Title MUST have ID main-title -->
       <h1 id="main-title" class="gold-text" style="font-size: 2em; margin: 5px 0; text-align: center;">LION MADNESS '26</h1>
       <div id="first-four-bar">
           <div style="color:#D4AF37; font-size:1.2vw; align-self:center; font-weight:bold;">FIRST FOUR<br>PLAY-IN</div>
@@ -106,6 +105,7 @@
       </div>
   </div>
 
+  <!-- Master Controls -->
   <div class="audio-controls">
       <button id="btn-bgm" onclick="toggleBGM()">🔊 BGM</button>
       <button id="btn-nuke" class="btn-danger" onclick="handleNuke()">⚠️ NUKE BRACKET</button>
@@ -119,7 +119,7 @@
         if(bgm.paused) { bgm.play(); } else { bgm.pause(); }
     }
 
-    // Dom Generation
+    // Bracket DOM Generation
     function generateMatchBox(i) {
         return `<div class="match-box" id="match-${i}">
             <div class="team-line" id="m${i}-t1-box"><img src="" class="team-avatar" id="m${i}-t1-img" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"><span id="m${i}-t1-name"></span></div>
@@ -142,28 +142,34 @@
         <div class="center-match" id="match-66" style="border-color:#8A0303; padding:20px;"><div class="team-line"><img src="" class="team-avatar" id="m66-t1-img"><span id="m66-t1-name"></span></div><div class="team-line" style="border:none;"><img src="" class="team-avatar" id="m66-t2-img"><span id="m66-t2-name"></span></div></div>
     `;
 
-    // 100% Reliable SetTimeout Zoom Engine (Restored!)
+    // Reverted, bulletproof zoom engine
     const zoomWrapper = document.getElementById('zoom-wrapper');
     function zoomToMatch(matchId) {
         const matchEl = document.getElementById(`match-${matchId}`);
         if(!matchEl) return;
+        
         zoomWrapper.style.transition = 'none'; 
         zoomWrapper.style.transform = 'translate(0px, 0px) scale(1)';
         zoomWrapper.style.transformOrigin = '0 0';
         
-        setTimeout(() => {
-            const wrapperRect = zoomWrapper.getBoundingClientRect();
-            const matchRect = matchEl.getBoundingClientRect();
-            const centerX = (matchRect.left - wrapperRect.left) + (matchRect.width / 2);
-            const centerY = (matchRect.top - wrapperRect.top) + (matchRect.height / 2);
-            const scale = 3.5;
-            const translateX = (window.innerWidth / 2) - (centerX * scale);
-            const translateY = (window.innerHeight / 2) - (centerY * scale);
-            
+        void zoomWrapper.offsetWidth; 
+        
+        const wrapperRect = zoomWrapper.getBoundingClientRect();
+        const matchRect = matchEl.getBoundingClientRect();
+        
+        const centerX = (matchRect.left - wrapperRect.left) + (matchRect.width / 2);
+        const centerY = (matchRect.top - wrapperRect.top) + (matchRect.height / 2);
+        
+        const scale = 3.5;
+        const translateX = (window.innerWidth / 2) - (centerX * scale);
+        const translateY = (window.innerHeight / 2) - (centerY * scale);
+        
+        requestAnimationFrame(() => {
             zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
             zoomWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-        }, 50);
+        });
     }
+    
     function zoomOut() {
         zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
         zoomWrapper.style.transform = `translate(0px, 0px) scale(1)`;
@@ -184,7 +190,7 @@
     let globalState = null;
     let calculatingWinner = false;
 
-    // MANUAL CONTROL RESTORED
+    // Manual Operator Logic
     function handleMainAction() {
         if(!globalState) return;
         if(globalState.phase === "REGISTRATION") {
@@ -208,7 +214,7 @@
       if(!data) return;
       globalState = data;
 
-      // Master Button Texts
+      // TV Operator Buttons
       let actionBtn = document.getElementById('btn-main-action');
       actionBtn.style.display = "block"; 
       
@@ -226,7 +232,7 @@
           actionBtn.style.display = "none"; 
       }
 
-      // Fill Bracket
+      // Populate Bracket Images
       data.matches.forEach((m, i) => {
           let box = document.getElementById(`match-${i}`);
           if(box) {
@@ -245,7 +251,7 @@
           }
       });
 
-      // Committee Panel
+      // Update Committee Panel UI Live
       let cPanel = document.getElementById('committee-panel');
       if(cPanel) {
           cPanel.innerHTML = "";
@@ -259,7 +265,7 @@
           });
       }
 
-      // Vote Logic: When everyone locks in, update ATOMICALLY to prevent race conditions
+      // VOTE LOCK-IN AUTO-CALCULATION
       if(data.phase === "VOTING" && data.users) {
           let userIds = Object.keys(data.users);
           let allLocked = true; let t1Votes = 0, t2Votes = 0;
@@ -285,7 +291,7 @@
           }
       }
 
-      // Phase Transition Cinematics
+      // Strict Visual Phase Transitions
       if (data.phase !== lastPhase || data.currentMatchId !== lastMatchId) {
           const activeMatch = data.matches[data.currentMatchId];
           const champScreen = document.getElementById('champion-screen');
@@ -299,21 +305,28 @@
 
           if(data.phase === "BRACKET") {
               document.getElementById('matchup-view').classList.remove('visible');
-              if (lastPhase === "REVEAL") { zoomToMatch(lastMatchId); setTimeout(() => zoomOut(), 300); } 
-              else { zoomOut(); }
+              zoomOut(); 
           }
           
           if(data.phase === "VOTING") {
-              document.getElementById('name-active-t1').innerText = activeMatch.t1; document.getElementById('img-active-t1').src = getImageUrl(activeMatch.t1);
-              document.getElementById('name-active-t2').innerText = activeMatch.t2; document.getElementById('img-active-t2').src = getImageUrl(activeMatch.t2);
-              document.getElementById('active-t1').classList.remove('winner-highlight'); document.getElementById('active-t2').classList.remove('winner-highlight');
+              document.getElementById('name-active-t1').innerText = activeMatch.t1; 
+              document.getElementById('img-active-t1').src = getImageUrl(activeMatch.t1);
+              document.getElementById('name-active-t2').innerText = activeMatch.t2; 
+              document.getElementById('img-active-t2').src = getImageUrl(activeMatch.t2);
+              
+              document.getElementById('active-t1').classList.remove('winner-highlight'); 
+              document.getElementById('active-t2').classList.remove('winner-highlight');
               document.getElementById('arena-title').innerText = "VOTING OPEN";
-              zoomToMatch(data.currentMatchId); setTimeout(() => { document.getElementById('matchup-view').classList.add('visible'); }, 1500);
+              
+              zoomToMatch(data.currentMatchId); 
+              setTimeout(() => { document.getElementById('matchup-view').classList.add('visible'); }, 1500);
           }
 
           if(data.phase === "REVEAL") {
               document.getElementById('arena-title').innerText = "ALPHA CROWNED";
-              let sfx = document.getElementById('cheer-sfx'); if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>console.log(e)); }
+              let sfx = document.getElementById('cheer-sfx'); 
+              if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>console.log(e)); }
+              
               if(activeMatch.winner === activeMatch.t1) document.getElementById('active-t1').classList.add('winner-highlight');
               else document.getElementById('active-t2').classList.add('winner-highlight');
           }
@@ -322,7 +335,10 @@
               document.getElementById('matchup-view').classList.remove('visible');
               document.getElementById('champ-name').innerText = activeMatch.winner;
               document.getElementById('champ-img').src = getImageUrl(activeMatch.winner);
-              let sfx = document.getElementById('cheer-sfx'); if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>console.log(e)); }
+              
+              let sfx = document.getElementById('cheer-sfx'); 
+              if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>console.log(e)); }
+              
               setTimeout(() => { if(champScreen) champScreen.classList.add('active'); }, 500);
           }
 
