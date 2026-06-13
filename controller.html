@@ -49,8 +49,12 @@
 
   <script src="logic.js"></script>
   <script>
-    let myVoterId = localStorage.getItem('lion_voter_id');
-    if(!myVoterId) { myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lion_voter_id', myVoterId); }
+    // CHANGED: Use sessionStorage so every tab gets a unique ID
+    let myVoterId = sessionStorage.getItem('lion_voter_id');
+    if(!myVoterId) { 
+        myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9); 
+        sessionStorage.setItem('lion_voter_id', myVoterId); 
+    }
 
     let currentSelection = 0;
     let currentMatch = null;
@@ -70,7 +74,8 @@
 
       if(data.phase === "REGISTRATION" && !isRegistered) {
           document.getElementById('view-register').style.display = "block";
-          localStorage.removeItem('lion_voter_name'); // clear local cache on nuke
+          // CHANGED: Use sessionStorage
+          sessionStorage.removeItem('lion_voter_name'); 
       } 
       else if (data.phase === "VOTING" && isRegistered) {
           document.getElementById('view-voting').style.display = "block";
@@ -108,7 +113,8 @@
        let name = document.getElementById('voter-name').value.trim();
        if(name === "") { alert("Enter a name!"); return; }
        db.ref(`tournament/users/${myVoterId}`).set(name);
-       localStorage.setItem('lion_voter_name', name);
+       // CHANGED: Use sessionStorage
+       sessionStorage.setItem('lion_voter_name', name);
     }
 
     function selectTeam(teamNum) {
