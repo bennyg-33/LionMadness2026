@@ -76,13 +76,11 @@
   <div id="zoom-wrapper">
       <h1 id="main-title" class="gold-text" style="font-size: 2em; margin: 5px 0;">LION MADNESS '26</h1>
       
-      <!-- FIRST FOUR UI -->
       <div id="first-four-bar">
           <div style="color:#D4AF37; font-size:1.2vw; align-self:center; font-weight:bold;">FIRST FOUR<br>PLAY-IN</div>
           <div id="ff-matches" style="display:flex; gap:10px;"></div>
       </div>
 
-      <!-- MAIN BRACKET GRID -->
       <div id="bracket-arena">
           <div class="bracket-half left" id="left-half"></div>
           <div class="center-stage" id="center-stage"></div>
@@ -119,11 +117,10 @@
         if(bgm.paused) { bgm.play(); } else { bgm.pause(); }
     }
 
-    // Bracket DOM Generation
     function generateMatchBox(i) {
         return `<div class="match-box" id="match-${i}">
-            <div class="team-line" id="m${i}-t1-box"><img src="" class="team-avatar" id="m${i}-t1-img" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"><span id="m${i}-t1-name"></span></div>
-            <div class="team-line" id="m${i}-t2-box" style="border:none; margin:0; padding:0;"><img src="" class="team-avatar" id="m${i}-t2-img" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"><span id="m${i}-t2-name"></span></div>
+            <div class="team-line" id="m${i}-t1-box"><img src="" class="team-avatar" id="m${i}-t1-img"><span id="m${i}-t1-name"></span></div>
+            <div class="team-line" id="m${i}-t2-box" style="border:none; margin:0; padding:0;"><img src="" class="team-avatar" id="m${i}-t2-img"><span id="m${i}-t2-name"></span></div>
         </div>`;
     }
 
@@ -134,11 +131,9 @@
         return col;
     }
 
-    // First Four
     let ffContainer = document.getElementById('ff-matches');
     for(let i=0; i<=3; i++) ffContainer.innerHTML += generateMatchBox(i);
 
-    // Main Bracket
     document.getElementById('left-half').append(generateColumn(4, 19), generateColumn(36, 43), generateColumn(52, 55), generateColumn(60, 61));
     document.getElementById('right-half').append(generateColumn(20, 35), generateColumn(44, 51), generateColumn(56, 59), generateColumn(62, 63));
     document.getElementById('center-stage').innerHTML = `
@@ -149,33 +144,21 @@
         <div class="center-match" id="match-66" style="border-color:#8A0303; padding:20px;"><div class="team-line"><img src="" class="team-avatar" id="m66-t1-img"><span id="m66-t1-name"></span></div><div class="team-line" style="border:none;"><img src="" class="team-avatar" id="m66-t2-img"><span id="m66-t2-name"></span></div></div>
     `;
 
-    // Rewritten Flawless Zoom Logic (YOUR EXACT CODE)
     const zoomWrapper = document.getElementById('zoom-wrapper');
     function zoomToMatch(matchId) {
         const matchEl = document.getElementById(`match-${matchId}`);
         if(!matchEl) return;
-        
-        // 1. Reset scale to get perfect native browser coordinates
         zoomWrapper.style.transition = 'none'; 
         zoomWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-        void zoomWrapper.offsetWidth; // Force CSS flush
-        
-        // 2. Find exact center of the specific matchup box
+        void zoomWrapper.offsetWidth; 
         const rect = matchEl.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
-        // 3. Find the exact center of the TV Screen
         const screenCenterX = window.innerWidth / 2;
         const screenCenterY = window.innerHeight / 2;
-        
-        // 4. Set the origin of the transform exactly to the box
         zoomWrapper.style.transformOrigin = `${centerX}px ${centerY}px`;
-        
-        // 5. Shift the container so the origin lands on the screen center, THEN scale up!
         const moveX = screenCenterX - centerX;
         const moveY = screenCenterY - centerY;
-        
         zoomWrapper.style.transition = 'transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
         zoomWrapper.style.transform = `translate(${moveX}px, ${moveY}px) scale(3.5)`;
     }
@@ -185,7 +168,6 @@
         zoomWrapper.style.transform = `translate(0px, 0px) scale(1)`;
     }
 
-    // Nuke System
     let nukeClicks = 0;
     function handleNuke() {
         if(nukeClicks === 0) {
@@ -205,7 +187,6 @@
     let globalState = null;
     let calculatingWinner = false;
 
-    // Manual Operator Logic
     function handleMainAction() {
         if(!globalState) return;
         if(globalState.phase === "REGISTRATION") {
@@ -231,7 +212,6 @@
 
       const activeMatch = data.matches[data.currentMatchId];
 
-      // Update TV Operator Buttons based on Phase
       let actionBtn = document.getElementById('btn-main-action');
       actionBtn.style.display = "block"; 
       
@@ -249,7 +229,6 @@
           actionBtn.style.display = "none"; 
       }
 
-      // Update Committee Panel UI Live
       let cPanel = document.getElementById('committee-panel');
       if(cPanel) {
           cPanel.innerHTML = "";
@@ -263,7 +242,6 @@
           });
       }
 
-      // Fill Bracket Text and Images (Now loops from 0 so First Four is included!)
       data.matches.forEach((m, i) => {
           let box = document.getElementById(`match-${i}`);
           if(box) {
@@ -287,7 +265,6 @@
           }
       });
 
-      // VOTE LOCK-IN AUTO-CALCULATION
       if(data.phase === "VOTING" && data.users) {
           let userIds = Object.keys(data.users);
           let allLocked = true; let t1Votes = 0, t2Votes = 0;
@@ -300,7 +277,7 @@
           if(allLocked && userIds.length > 0 && !calculatingWinner) {
               calculatingWinner = true;
               let winner = t1Votes > t2Votes ? activeMatch.t1 : activeMatch.t2;
-              if(t1Votes === t2Votes) winner = activeMatch.t1; // Tie-breaker fallback
+              if(t1Votes === t2Votes) winner = activeMatch.t1; 
 
               let updates = {};
               updates[`matches/${activeMatch.id}/winner`] = winner;
@@ -312,7 +289,6 @@
           }
       }
 
-      // Phase Transition Cinematics
       if (data.phase !== lastPhase || data.currentMatchId !== lastMatchId) {
           
           const champScreen = document.getElementById('champion-screen');
@@ -346,7 +322,6 @@
               document.getElementById('active-t2').classList.remove('winner-highlight');
               document.getElementById('arena-title').innerText = "VOTING OPEN";
 
-              // Cinematic: Zoom in on bracket, then fade to Arena
               zoomToMatch(data.currentMatchId);
               setTimeout(() => {
                   document.getElementById('matchup-view').classList.add('visible');
@@ -368,10 +343,8 @@
               if (typeof getImageUrl === "function") {
                   document.getElementById('champ-img').src = getImageUrl(activeMatch.winner);
               }
-              
               let sfx = document.getElementById('cheer-sfx'); 
               if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>console.log(e)); }
-              
               setTimeout(() => { if(champScreen) champScreen.classList.add('active'); }, 500);
           }
 

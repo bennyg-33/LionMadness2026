@@ -224,7 +224,6 @@ function initializeTournament() {
       else { matches[i].t1 = rem[teamIdx++]; matches[i].t2 = rem[teamIdx++]; }
   }
 
-  // Wipes all historical data and locks the system into Registration phase
   db.ref('tournament').set({
     phase: "REGISTRATION", 
     currentMatchId: 0,

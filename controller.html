@@ -47,9 +47,11 @@
       <button id="btn-lock" class="btn-lock" onclick="lockIn()">🔒 LOCK IN VOTE</button>
   </div>
 
+  <!-- MUST BE INCLUDED TO CONNECT TO FIREBASE -->
   <script src="logic.js"></script>
+
   <script>
-    // CHANGED: Use sessionStorage so every tab gets a unique ID
+    // USING sessionStorage FOR TAB TESTING - SWAP TO localStorage for live event!
     let myVoterId = sessionStorage.getItem('lion_voter_id');
     if(!myVoterId) { 
         myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9); 
@@ -67,14 +69,12 @@
       let myVote = (data.votes && data.votes[myVoterId]) ? data.votes[myVoterId] : null;
       let isRegistered = (data.users && data.users[myVoterId]);
 
-      // Hide everything first
       document.getElementById('view-register').style.display = "none";
       document.getElementById('view-waiting').style.display = "none";
       document.getElementById('view-voting').style.display = "none";
 
       if(data.phase === "REGISTRATION" && !isRegistered) {
           document.getElementById('view-register').style.display = "block";
-          // CHANGED: Use sessionStorage
           sessionStorage.removeItem('lion_voter_name'); 
       } 
       else if (data.phase === "VOTING" && isRegistered) {
@@ -84,7 +84,6 @@
           document.getElementById('btn-t1').innerText = currentMatch.t1;
           document.getElementById('btn-t2').innerText = currentMatch.t2;
           
-          // Reset or setup selection UI
           currentSelection = myVote ? myVote.team : 0;
           document.getElementById('btn-t1').className = currentSelection === 1 ? 'btn-team selected' : 'btn-team';
           document.getElementById('btn-t2').className = currentSelection === 2 ? 'btn-team selected' : 'btn-team';
@@ -99,7 +98,6 @@
           }
       }
       else {
-          // Fallback waiting screen (BRACKET, REVEAL, CHAMPION)
           document.getElementById('view-waiting').style.display = "block";
           if(currentMatch) document.getElementById('match-info').innerText = `NEXT: ${currentMatch.t1} vs ${currentMatch.t2}`;
           
@@ -113,7 +111,6 @@
        let name = document.getElementById('voter-name').value.trim();
        if(name === "") { alert("Enter a name!"); return; }
        db.ref(`tournament/users/${myVoterId}`).set(name);
-       // CHANGED: Use sessionStorage
        sessionStorage.setItem('lion_voter_name', name);
     }
 
