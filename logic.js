@@ -39,7 +39,9 @@ const customImages = {
     "Jason W": "https://upload.wikimedia.org/wikipedia/en/5/53/Abraham-Whistler-Kris-Kristofferson-2004.jpg",
     "McKenzie Maher": "https://upload.wikimedia.org/wikipedia/commons/7/76/Logo_of_Rohde_%26_Schwarz_%282009%29.svg",
     "Erica Kirk": "https://unherd.com/wp-content/uploads/2026/03/Screenshot-2026-03-27-at-19.04.36.jpeg",
-    "JC Yang": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Social_Network_Analysis_Visualization.png"
+    "JC Yang": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Social_Network_Analysis_Visualization.png",
+    "Burger King Guy": "https://i.pinimg.com/736x/49/02/64/49026489e6730781e1c007385c25b5bc.jpg",
+    "Luigi Mangione": "https://pbs.twimg.com/media/GeZ9WsLbMAAwjAT.jpg"
 };
 
 // --- WIKIPEDIA ARTICLE DICTIONARY ---
@@ -76,7 +78,7 @@ const wikiArticles = {
     "Henry VIII": "Henry VIII",
     "Pablo Escobar": "Pablo Escobar",
     "Tom Cruise": "Tom Cruise",
-    "El Chapo": "Joaquín Guzmán",
+    "El Chapo": "El Chapo",
     "Mel Gibson": "Mel Gibson",
     "George Washington": "George Washington",
     "Ghislane Maxwell": "Ghislaine Maxwell",
@@ -90,8 +92,6 @@ const wikiArticles = {
     "Charles Manson": "Charles Manson",
     "50 Cent": "50 Cent",
     "Andrew Jackson": "Andrew Jackson",
-    "Luigi Mangione": "Luigi Mangione",
-    "Burger King Guy": "The Burger King",
     "The Rock.Ai": "Dwayne Johnson"
 };
 
