@@ -205,13 +205,15 @@
       // 1. Setup Control Button based on Phase
       let actionBtn = document.getElementById('btn-main-action');
       let nukeBtn = document.getElementById('btn-nuke');
-      actionBtn.style.display = "block"; nukeBtn.style.display = "none";
+      
+      actionBtn.style.display = "block"; 
+      nukeBtn.style.display = "block"; // ALWAYS SHOW NUKE BUTTON as an escape hatch
       
       if(data.phase === "REGISTRATION") {
-          actionBtn.innerText = "START TOURNAMENT"; nukeBtn.style.display = "block";
+          actionBtn.innerText = "START TOURNAMENT"; 
           document.getElementById('main-title').innerText = `REGISTRATION OPEN - ${Object.keys(data.users || {}).length} Joined`;
       } else if(data.phase === "BRACKET") {
-          actionBtn.innerText = "ZOOM IN & START VOTE"; nukeBtn.style.display = "block";
+          actionBtn.innerText = "ZOOM IN & START VOTE"; 
           document.getElementById('main-title').innerText = "LION MADNESS '26";
       } else if(data.phase === "REVEAL") {
           actionBtn.innerText = "NEXT MATCH";

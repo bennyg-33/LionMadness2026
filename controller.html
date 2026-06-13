@@ -47,6 +47,7 @@
       <button id="btn-lock" class="btn-lock" onclick="lockIn()">🔒 LOCK IN VOTE</button>
   </div>
 
+  <script src="logic.js"></script>
   <script>
     let myVoterId = localStorage.getItem('lion_voter_id');
     if(!myVoterId) { myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lion_voter_id', myVoterId); }
