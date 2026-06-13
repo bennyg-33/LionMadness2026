@@ -14,87 +14,96 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.database();
-// Bootleg comment commit
-// --- IMAGE DICTIONARY ---
-// Now using just the Wikipedia File names to fetch via the imageinfo API!
-const contestantImages = {
-    "Bernie Madoff": "File:Bernard_Madoff.jpg",
-    "Ye": "File:Kanye_West_at_the_2009_Tribeca_Film_Festival-2_(cropped).jpg",
-    "Diddy": "File:Sean_Combs_2010.jpg",
-    "Bibi": "File:Benjamin_Netanyahu_2020.jpg",
-    "Jordan Belfort": "File:Jordan_Belfort_2014.jpg",
-    "Bill Cosby": "File:Bill_Cosby_2010.jpg",
-    "Joseph Stalin": "File:Joseph_Stalin_1945.jpg",
-    "Saddam Hussein": "File:Saddam_Hussein_1979.jpg",
-    "Osama Bin Laden": "File:Osama_bin_Laden_portrait.jpg",
-    "R Kelly": "File:R._Kelly_in_2009.jpg",
-    "Malcom X": "File:Malcolm_X_NYWTS_2a.jpg",
-    "Jeffrey Epstein": "File:Jeffrey_Epstein.jpg",
-    "OJ Simpson": "File:O.J._Simpson_1990.jpg",
-    "Henry Ford": "File:Henry_Ford_1919.jpg",
-    "Ted Kaszyncki": "File:Ted_Kaczynski.jpg",
-    "Jon Jones": "File:Jon_Jones_2015.jpg",
-    "John D Rockefeller": "File:John_D._Rockefeller_1885.jpg",
-    "Alex Jones": "File:Alex_Jones_2018.jpg",
-    "Joseph Smith": "File:Joseph_Smith_Painting.jpg",
-    "Deshaun Watson": "File:Deshaun_Watson_2019.jpg",
-    "Genghis Khan": "File:Genghis_Khan_painting.jpg",
-    "John Daly": "File:John_Daly_2008.jpg",
-    "Ted Bundy": "File:Theodore_Robert_Bundy.jpg",
-    "Harvey Weinstein": "File:Harvey_Weinstein_2011_Shankbone.jpg",
-    "Ronald Reagan": "File:Reagan_official_portrait.jpg",
-    "L Ron Hubbard": "File:L._Ron_Hubbard_1950.jpg",
-    "Dale Earnhardt": "File:Dale_Earnhardt_1998.jpg",
-    "Henry VIII": "File:Hans_Holbein_the_Younger_-_Portrait_of_Henry_VIII.jpg",
-    "Pablo Escobar": "File:Pablo_Escobar_Mugshot.jpg",
-    "Tom Cruise": "File:Tom_Cruise_by_Gage_Skidmore_2.jpg",
-    "El Chapo": "File:Joaquin_Guzman_Loera.jpg",
-    "Mel Gibson": "File:Mel_Gibson_Cannes_2016.jpg",
-    "George Washington": "File:Gilbert_Stuart_Washington.jpg",
-    "Ghislane Maxwell": "File:Ghislaine_Maxwell.jpg",
-    "Karl Malone": "File:Karl_Malone_1992.jpg",
-    "King Leopold": "File:Leopold_II_of_Belgium.jpg",
-    "Peter Thiel": "File:Peter_Thiel_by_Gage_Skidmore.jpg",
-    "Magic Johnson": "File:Magic_Johnson_2012.jpg",
-    "Dick Cheney": "File:Richard_Cheney_official_photo.jpg",
-    "Ozzy Osborne": "File:Ozzy_Osbourne_2010.jpg",
-    "Robert E Lee": "File:Robert_Edward_Lee.jpg",
-    "Charles Manson": "File:Charles_Manson_1969.jpg",
-    "50 Cent": "File:50_Cent_2018.jpg",
-    "Andrew Jackson": "File:Andrew_Jackson_painter_unknown.jpg",
-    "Luigi Mangione": "File:Luigi_Mangione.jpg",
-    "Burger King Guy": "File:The_Burger_King.jpg",
-    "The Rock.Ai": "File:Dwayne_Johnson_2,_2013.jpg"
-	"Bart S": "File:James_Clerk_Maxwell_Statue_Equations.jpg"
-	"Bubba": "File:Bill_Clinton_saxophone_8a9e10f958efc78651fa4c9fb6228e2e_(cropped).jpg" 
-	"Erica Kirk": "File:AmericaFest_2025_-_Erika_Kirk_23_(cropped).jpg" 
-	"Laura C": "File:White_witch_in_battle_for_naria.jpg"
-	"Mike L": "File:Evb-my_hog.jpg"
-	"Stephanie C": "File:Jabba_the_Hutt_in_Return_of_the_Jedi_(1983).png"
-	"The Painter?": "File:Adolf_Hitler_-_06.jpg"
-	"McKenzie Maher": "File:Logo_of_Rohde_&_Schwarz_(2009).svg"
-	"Rusty M": "File:Agriculture_in_Britain-_Life_on_George_Casely's_Farm,_Devon,_England,_1942_D9817.jpg"
-	"AB": "File:Henry_Cejudo_%26_Antonio_Brown_(54235293159).jpg"
-	"Anna S": "File:Kate_Gosselin.jpg"
-	"Mommy I" "File:Asymmetrical_bob_(51210139996).jpg"
-	"JC Yang": "File:Social_Network_Analysis_Visualization.png"
-	"Joe U": "File:Julian_Richings_by_Gage_Skidmore.jpg"
-	"Gene S" "File:Henry_Winkler_Fonzie_1977.JPG" 
-	"Choo-Beng": "File:Herpestes_ichneumon_Египетский_мангуст,_или_фараонова_крыса,_или_ихневмо́н.jpg"
-	"Gary Plauche": "File:Gary_Plauche_shoots_Jeffery_Doucet.jpeg"
-	"Jason W": "File:Abraham-Whistler-Kris-Kristofferson-2004.jpg"
-	"Chuck M": "File:Zahn_McClarnon_by_Gage_Skidmore.jpg" 
+
+// --- CUSTOM IMAGE DICTIONARY ---
+// Paste direct image URLs (like Imgur links) inside the quotes for your custom competitors!
+// Make sure the link ends in .jpg, .png, etc.
+const customImages = {
+    "Choo-Beng": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Herpestes_ichneumon_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%BC%D0%B0%D0%BD%D0%B3%D1%83%D1%81%D1%82%2C_%D0%B8%D0%BB%D0%B8_%D1%84%D0%B0%D1%80%D0%B0%D0%BE%D0%BD%D0%BE%D0%B2%D0%B0_%D0%BA%D1%80%D1%8B%D1%81%D0%B0%2C_%D0%B8%D0%BB%D0%B8_%D0%B8%D1%85%D0%BD%D0%B5%D0%B2%D0%BC%D0%BE%CC%81%D0%BD.jpg",
+    "Laura C": "https://upload.wikimedia.org/wikipedia/en/d/dc/White_witch_in_battle_for_naria.jpg",
+    "Mommy I": "https://upload.wikimedia.org/wikipedia/commons/3/38/Asymmetrical_bob_%2851210139996%29.jpg",
+    "Bart S": "https://upload.wikimedia.org/wikipedia/commons/c/cd/James_Clerk_Maxwell_Statue_Equations.jpg",
+    "Anna S": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Kate_Gosselin.jpg",
+    "Gene S": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Henry_Winkler_Fonzie_1977.JPG",
+    "Mike L": "https://upload.wikimedia.org/wikipedia/commons/5/59/Evb-my_hog.jpg",
+    "AB": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Henry_Cejudo_%26_Antonio_Brown_%2854235293159%29.jpg",
+    "Gary Plauche": "https://upload.wikimedia.org/wikipedia/en/3/30/Gary_Plauche_shoots_Jeffery_Doucet.jpeg", // Note: If he has a Wiki page, you can move him to the dictionary below!
+    "Stephanie C": "https://upload.wikimedia.org/wikipedia/en/5/53/Jabba_the_Hutt_in_Return_of_the_Jedi_%281983%29.png",
+    "Nicole L": "https://media.licdn.com/dms/image/v2/D5603AQGQ9UERTnfP1w/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1678227230913?e=1782950400&v=beta&t=bNelaXWuZuMwxYsysnLJSOEmwagN2K44TbyB6emM2ec",
+    "The Painter?": "https://upload.wikimedia.org/wikipedia/commons/6/69/Adolf_Hitler_-_06.jpg",
+    "Chuck M": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Zahn_McClarnon_by_Gage_Skidmore.jpg",
+    "Rusty M": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Agriculture_in_Britain-_Life_on_George_Casely%27s_Farm%2C_Devon%2C_England%2C_1942_D9817.jpg",
+    "Gopal": "https://media.licdn.com/dms/image/v2/C5103AQE55H9UREcddQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1516266785068?e=1782950400&v=beta&t=4Ucd4OelWfaGKsC_QoHCH_ntK3g5Y5CC4ChL3bDKAJU",
+    "Bubba": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Bill_Clinton_saxophone_8a9e10f958efc78651fa4c9fb6228e2e_%28cropped%29.jpg",
+    "Joe U": "https://upload.wikimedia.org/wikipedia/commons/d/df/Julian_Richings_by_Gage_Skidmore.jpg",
+    "Jason W": "https://upload.wikimedia.org/wikipedia/en/5/53/Abraham-Whistler-Kris-Kristofferson-2004.jpg",
+    "McKenzie Maher": "https://upload.wikimedia.org/wikipedia/commons/7/76/Logo_of_Rohde_%26_Schwarz_%282009%29.svg",
+    "Erica Kirk": "https://unherd.com/wp-content/uploads/2026/03/Screenshot-2026-03-27-at-19.04.36.jpeg",
+    "JC Yang": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Social_Network_Analysis_Visualization.png",
+    "Burger King Guy": "https://i.pinimg.com/736x/49/02/64/49026489e6730781e1c007385c25b5bc.jpg",
+    "Luigi Mangione": "https://pbs.twimg.com/media/GeZ9WsLbMAAwjAT.jpg"
+};
+
+// --- WIKIPEDIA ARTICLE DICTIONARY ---
+// Instead of fragile image file names, we just provide the Wikipedia Article Title!
+// The API will dynamically fetch the official "profile picture" of that article.
+const wikiArticles = {
+    "Bernie Madoff": "Bernie Madoff",
+    "Ye": "Kanye West",
+    "Diddy": "Sean Combs",
+    "Bibi": "Benjamin Netanyahu",
+    "Jordan Belfort": "Jordan Belfort",
+    "Bill Cosby": "Bill Cosby",
+    "Joseph Stalin": "Joseph Stalin",
+    "Saddam Hussein": "Saddam Hussein",
+    "Osama Bin Laden": "Osama bin Laden",
+    "R Kelly": "R. Kelly",
+    "Malcom X": "Malcolm X",
+    "Jeffrey Epstein": "Jeffrey Epstein",
+    "OJ Simpson": "O. J. Simpson",
+    "Henry Ford": "Henry Ford",
+    "Ted Kaszyncki": "Ted Kaczynski",
+    "Jon Jones": "Jon Jones",
+    "John D Rockefeller": "John D. Rockefeller",
+    "Alex Jones": "Alex Jones",
+    "Joseph Smith": "Joseph Smith",
+    "Deshaun Watson": "Deshaun Watson",
+    "Genghis Khan": "Genghis Khan",
+    "John Daly": "John Daly (golfer)",
+    "Ted Bundy": "Ted Bundy",
+    "Harvey Weinstein": "Harvey Weinstein",
+    "Ronald Reagan": "Ronald Reagan",
+    "L Ron Hubbard": "L. Ron Hubbard",
+    "Dale Earnhardt": "Dale Earnhardt",
+    "Henry VIII": "Henry VIII",
+    "Pablo Escobar": "Pablo Escobar",
+    "Tom Cruise": "Tom Cruise",
+    "El Chapo": "El Chapo",
+    "Mel Gibson": "Mel Gibson",
+    "George Washington": "George Washington",
+    "Ghislane Maxwell": "Ghislaine Maxwell",
+    "Karl Malone": "Karl Malone",
+    "King Leopold": "Leopold II of Belgium",
+    "Peter Thiel": "Peter Thiel",
+    "Magic Johnson": "Magic Johnson",
+    "Dick Cheney": "Dick Cheney",
+    "Ozzy Osborne": "Ozzy Osbourne",
+    "Robert E Lee": "Robert E. Lee",
+    "Charles Manson": "Charles Manson",
+    "50 Cent": "50 Cent",
+    "Andrew Jackson": "Andrew Jackson",
+    "The Rock.Ai": "Dwayne Johnson"
 };
 
 // Global cache for the active URLs provided by the API
 const resolvedImages = {};
 
-// Background API Fetcher
 function fetchWikipediaImages() {
-    // Wikipedia API allows fetching up to 50 titles per query. We have 47, which is perfect!
-    const titles = Object.values(contestantImages).join('|');
-    // Removed thumbnail sizing - fetching the original full-sized URLs
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
+    // Wikipedia API allows fetching up to 50 titles per query. 
+    const titles = Object.values(wikiArticles).join('|');
+    
+    // We use prop=pageimages and piprop=original to safely get the full-sized main image!
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=pageimages&piprop=original&format=json&origin=*`;
 
     fetch(url)
         .then(res => res.json())
@@ -105,14 +114,13 @@ function fetchWikipediaImages() {
             
             // Map the API URLs back to the competitor names
             Object.values(pages).forEach(page => {
-                if (page.imageinfo && page.imageinfo.length > 0) {
-                    // Grab the original full resolution URL instead of the thumbnail
-                    const fullUrl = page.imageinfo[0].url; 
-                    const title = page.title; // e.g. "File:Bernard Madoff.jpg"
+                if (page.original && page.original.source) {
+                    const fullUrl = page.original.source; 
+                    const articleTitle = page.title; 
                     
-                    Object.keys(contestantImages).forEach(name => {
-                        // Match titles while ignoring spaces vs underscores
-                        if (contestantImages[name].replace(/_/g, ' ') === title.replace(/_/g, ' ')) {
+                    Object.keys(wikiArticles).forEach(name => {
+                        // Match the article title to assign the image URL
+                        if (wikiArticles[name].toLowerCase() === articleTitle.toLowerCase()) {
                             resolvedImages[name] = fullUrl;
                         }
                     });
@@ -130,7 +138,7 @@ function fetchWikipediaImages() {
                 });
             }
             
-            // Also update the active matchup view
+            // Also update the active matchup view if it's currently open
             let activeT1Name = document.getElementById('name-active-t1');
             let activeT1Img = document.getElementById('img-active-t1');
             if(activeT1Name && activeT1Img && activeT1Name.innerText !== "TBD") {
@@ -154,16 +162,20 @@ function getImageUrl(name) {
     
     let cleanName = name.trim();
     
-    // 1. If the Wikipedia API has provided the live URL, use it immediately!
+    // 1. Check if you provided a custom URL!
+    if (customImages[cleanName] && customImages[cleanName] !== "") {
+        return customImages[cleanName];
+    }
+
+    // 2. If the Wikipedia API has provided the live URL, use it immediately!
     if (resolvedImages[cleanName]) return resolvedImages[cleanName];
     
-    // 2. Hide waiting/TBD images
+    // 3. Hide waiting/TBD images
     if (cleanName.includes("Waiting") || cleanName.includes("TBD")) {
          return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
     
-    // 3. Temporary fallback (SVGs) while the API finishes fetching, 
-    // or permanent fallback for internal names (like "Mike L")
+    // 4. Golden SVG Fallback (Used while loading, or for internal names like "Laura C")
     let initial = cleanName.charAt(0).toUpperCase();
     let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
         <rect width="100" height="100" fill="#111111" stroke="#D4AF37" stroke-width="2"/>
@@ -196,47 +208,28 @@ function shuffle(array) {
 function initializeTournament() {
   const randomized = shuffle([...rawCompetitors]);
   let matches = [];
-  
-  for(let i=0; i<67; i++) {
-      matches.push({ id: i, t1: "TBD", t2: "TBD", winner: null });
-  }
+  for(let i=0; i<67; i++) matches.push({ id: i, t1: "TBD", t2: "TBD", winner: null });
 
-  // Route winners through the bracket
   for(let i=0; i<32; i++) { matches[i+4].nextMatch = 36 + Math.floor(i/2); matches[i+4].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<16; i++) { matches[i+36].nextMatch = 52 + Math.floor(i/2); matches[i+36].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<8; i++) { matches[i+52].nextMatch = 60 + Math.floor(i/2); matches[i+52].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<4; i++) { matches[i+60].nextMatch = 64 + Math.floor(i/2); matches[i+60].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<2; i++) { matches[i+64].nextMatch = 66; matches[i+64].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
 
-  // Initial Seedings for First Four
-  for(let i=0; i<4; i++) {
-      matches[i].t1 = randomized[i*2];
-      matches[i].t2 = randomized[i*2 + 1];
-      matches[i].nextMatch = [4, 12, 20, 28][i];
-      matches[i].nextSlot = 't2';
-  }
+  for(let i=0; i<4; i++) { matches[i].t1 = randomized[i*2]; matches[i].t2 = randomized[i*2 + 1]; matches[i].nextMatch = [4, 12, 20, 28][i]; matches[i].nextSlot = 't2'; }
 
-  // Seed Main Bracket
-  let remainingTeams = randomized.slice(8);
-  let teamIdx = 0;
+  let teamIdx = 0; let rem = randomized.slice(8);
   for(let i=4; i<36; i++) {
-      if ([4, 12, 20, 28].includes(i)) {
-          matches[i].t1 = remainingTeams[teamIdx++];
-          matches[i].t2 = "Waiting on First Four..."; 
-      } else {
-          matches[i].t1 = remainingTeams[teamIdx++];
-          matches[i].t2 = remainingTeams[teamIdx++];
-      }
+      if ([4, 12, 20, 28].includes(i)) { matches[i].t1 = rem[teamIdx++]; matches[i].t2 = "Waiting on First Four..."; } 
+      else { matches[i].t1 = rem[teamIdx++]; matches[i].t2 = rem[teamIdx++]; }
   }
 
+  // Wipes all historical data and locks the system into Registration phase
   db.ref('tournament').set({
-    phase: "BRACKET", 
+    phase: "REGISTRATION", 
     currentMatchId: 0,
     matches: matches,
-    votes: null
-  }).then(() => {
-    alert("ALPHA BRACKET GENERATED AND SYNCED.");
-  }).catch((error) => {
-    console.error("Error generating bracket: ", error);
+    votes: null,
+    users: null
   });
 }
