@@ -20,7 +20,7 @@ const db = firebase.database();
 // Make sure the link ends in .jpg, .png, etc.
 const customImages = {
     "Choo-Beng": "https://en.wikipedia.org/wiki/File:Herpestes_ichneumon_Египетский_мангуст,_или_фараонова_крыса,_или_ихневмо́н.jpg",
-    "Laura C": "https://en.wikipedia.org/wiki/File:White_witch_in_battle_for_naria.jpg",
+    "Laura C": "https://upload.wikimedia.org/wikipedia/en/d/dc/White_witch_in_battle_for_naria.jpg",
     "Mommy I": "",
     "Bart S": "",
     "Anna S": "",
