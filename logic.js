@@ -15,67 +15,68 @@ if (!firebase.apps.length) {
 }
 const db = firebase.database();
 
-// --- IMAGE DICTIONARY ---
-// Now using just the Wikipedia File names to fetch via the imageinfo API!
-const contestantImages = {
-    "Bernie Madoff": "File:Bernard_Madoff.jpg",
-    "Ye": "File:Kanye_West_at_the_2009_Tribeca_Film_Festival-2_(cropped).jpg",
-    "Diddy": "File:Sean_Combs_2010.jpg",
-    "Bibi": "File:Benjamin_Netanyahu_2020.jpg",
-    "Jordan Belfort": "File:Jordan_Belfort_2014.jpg",
-    "Bill Cosby": "File:Bill_Cosby_2010.jpg",
-    "Joseph Stalin": "File:Joseph_Stalin_1945.jpg",
-    "Saddam Hussein": "File:Saddam_Hussein_1979.jpg",
-    "Osama Bin Laden": "File:Osama_bin_Laden_portrait.jpg",
-    "R Kelly": "File:R._Kelly_in_2009.jpg",
-    "Malcom X": "File:Malcolm_X_NYWTS_2a.jpg",
-    "Jeffrey Epstein": "File:Jeffrey_Epstein.jpg",
-    "OJ Simpson": "File:O.J._Simpson_1990.jpg",
-    "Henry Ford": "File:Henry_Ford_1919.jpg",
-    "Ted Kaszyncki": "File:Ted_Kaczynski.jpg",
-    "Jon Jones": "File:Jon_Jones_2015.jpg",
-    "John D Rockefeller": "File:John_D._Rockefeller_1885.jpg",
-    "Alex Jones": "File:Alex_Jones_2018.jpg",
-    "Joseph Smith": "File:Joseph_Smith_Painting.jpg",
-    "Deshaun Watson": "File:Deshaun_Watson_2019.jpg",
-    "Genghis Khan": "File:Genghis_Khan_painting.jpg",
-    "John Daly": "File:John_Daly_2008.jpg",
-    "Ted Bundy": "File:Theodore_Robert_Bundy.jpg",
-    "Harvey Weinstein": "File:Harvey_Weinstein_2011_Shankbone.jpg",
-    "Ronald Reagan": "File:Reagan_official_portrait.jpg",
-    "L Ron Hubbard": "File:L._Ron_Hubbard_1950.jpg",
-    "Dale Earnhardt": "File:Dale_Earnhardt_1998.jpg",
-    "Henry VIII": "File:Hans_Holbein_the_Younger_-_Portrait_of_Henry_VIII.jpg",
-    "Pablo Escobar": "File:Pablo_Escobar_Mugshot.jpg",
-    "Tom Cruise": "File:Tom_Cruise_by_Gage_Skidmore_2.jpg",
-    "El Chapo": "File:Joaquin_Guzman_Loera.jpg",
-    "Mel Gibson": "File:Mel_Gibson_Cannes_2016.jpg",
-    "George Washington": "File:Gilbert_Stuart_Washington.jpg",
-    "Ghislane Maxwell": "File:Ghislaine_Maxwell.jpg",
-    "Karl Malone": "File:Karl_Malone_1992.jpg",
-    "King Leopold": "File:Leopold_II_of_Belgium.jpg",
-    "Peter Thiel": "File:Peter_Thiel_by_Gage_Skidmore.jpg",
-    "Magic Johnson": "File:Magic_Johnson_2012.jpg",
-    "Dick Cheney": "File:Richard_Cheney_official_photo.jpg",
-    "Ozzy Osborne": "File:Ozzy_Osbourne_2010.jpg",
-    "Robert E Lee": "File:Robert_Edward_Lee.jpg",
-    "Charles Manson": "File:Charles_Manson_1969.jpg",
-    "50 Cent": "File:50_Cent_2018.jpg",
-    "Andrew Jackson": "File:Andrew_Jackson_painter_unknown.jpg",
-    "Luigi Mangione": "File:Luigi_Mangione.jpg",
-    "Burger King Guy": "File:The_Burger_King.jpg",
-    "The Rock.Ai": "File:Dwayne_Johnson_2,_2013.jpg"
+// --- WIKIPEDIA ARTICLE DICTIONARY ---
+// Instead of fragile image file names, we just provide the Wikipedia Article Title!
+// The API will dynamically fetch the official "profile picture" of that article.
+const wikiArticles = {
+    "Bernie Madoff": "Bernie Madoff",
+    "Ye": "Kanye West",
+    "Diddy": "Sean Combs",
+    "Bibi": "Benjamin Netanyahu",
+    "Jordan Belfort": "Jordan Belfort",
+    "Bill Cosby": "Bill Cosby",
+    "Joseph Stalin": "Joseph Stalin",
+    "Saddam Hussein": "Saddam Hussein",
+    "Osama Bin Laden": "Osama bin Laden",
+    "R Kelly": "R. Kelly",
+    "Malcom X": "Malcolm X",
+    "Jeffrey Epstein": "Jeffrey Epstein",
+    "OJ Simpson": "O. J. Simpson",
+    "Henry Ford": "Henry Ford",
+    "Ted Kaszyncki": "Ted Kaczynski",
+    "Jon Jones": "Jon Jones",
+    "John D Rockefeller": "John D. Rockefeller",
+    "Alex Jones": "Alex Jones",
+    "Joseph Smith": "Joseph Smith",
+    "Deshaun Watson": "Deshaun Watson",
+    "Genghis Khan": "Genghis Khan",
+    "John Daly": "John Daly (golfer)",
+    "Ted Bundy": "Ted Bundy",
+    "Harvey Weinstein": "Harvey Weinstein",
+    "Ronald Reagan": "Ronald Reagan",
+    "L Ron Hubbard": "L. Ron Hubbard",
+    "Dale Earnhardt": "Dale Earnhardt",
+    "Henry VIII": "Henry VIII",
+    "Pablo Escobar": "Pablo Escobar",
+    "Tom Cruise": "Tom Cruise",
+    "El Chapo": "Joaquín Guzmán",
+    "Mel Gibson": "Mel Gibson",
+    "George Washington": "George Washington",
+    "Ghislane Maxwell": "Ghislaine Maxwell",
+    "Karl Malone": "Karl Malone",
+    "King Leopold": "Leopold II of Belgium",
+    "Peter Thiel": "Peter Thiel",
+    "Magic Johnson": "Magic Johnson",
+    "Dick Cheney": "Dick Cheney",
+    "Ozzy Osborne": "Ozzy Osbourne",
+    "Robert E Lee": "Robert E. Lee",
+    "Charles Manson": "Charles Manson",
+    "50 Cent": "50 Cent",
+    "Andrew Jackson": "Andrew Jackson",
+    "Luigi Mangione": "Luigi Mangione",
+    "Burger King Guy": "The Burger King",
+    "The Rock.Ai": "Dwayne Johnson"
 };
 
 // Global cache for the active URLs provided by the API
 const resolvedImages = {};
 
-// Background API Fetcher
 function fetchWikipediaImages() {
-    // Wikipedia API allows fetching up to 50 titles per query. We have 47, which is perfect!
-    const titles = Object.values(contestantImages).join('|');
-    // Removed thumbnail sizing - fetching the original full-sized URLs
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&format=json&origin=*`;
+    // Wikipedia API allows fetching up to 50 titles per query. 
+    const titles = Object.values(wikiArticles).join('|');
+    
+    // We use prop=pageimages and piprop=original to safely get the full-sized main image!
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=pageimages&piprop=original&format=json&origin=*`;
 
     fetch(url)
         .then(res => res.json())
@@ -86,14 +87,13 @@ function fetchWikipediaImages() {
             
             // Map the API URLs back to the competitor names
             Object.values(pages).forEach(page => {
-                if (page.imageinfo && page.imageinfo.length > 0) {
-                    // Grab the original full resolution URL instead of the thumbnail
-                    const fullUrl = page.imageinfo[0].url; 
-                    const title = page.title; // e.g. "File:Bernard Madoff.jpg"
+                if (page.original && page.original.source) {
+                    const fullUrl = page.original.source; 
+                    const articleTitle = page.title; 
                     
-                    Object.keys(contestantImages).forEach(name => {
-                        // Match titles while ignoring spaces vs underscores
-                        if (contestantImages[name].replace(/_/g, ' ') === title.replace(/_/g, ' ')) {
+                    Object.keys(wikiArticles).forEach(name => {
+                        // Match the article title to assign the image URL
+                        if (wikiArticles[name].toLowerCase() === articleTitle.toLowerCase()) {
                             resolvedImages[name] = fullUrl;
                         }
                     });
@@ -111,7 +111,7 @@ function fetchWikipediaImages() {
                 });
             }
             
-            // Also update the active matchup view
+            // Also update the active matchup view if it's currently open
             let activeT1Name = document.getElementById('name-active-t1');
             let activeT1Img = document.getElementById('img-active-t1');
             if(activeT1Name && activeT1Img && activeT1Name.innerText !== "TBD") {
@@ -143,8 +143,7 @@ function getImageUrl(name) {
          return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
     
-    // 3. Temporary fallback (SVGs) while the API finishes fetching, 
-    // or permanent fallback for internal names (like "Mike L")
+    // 3. Golden SVG Fallback (Used while loading, or for internal names like "Laura C")
     let initial = cleanName.charAt(0).toUpperCase();
     let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
         <rect width="100" height="100" fill="#111111" stroke="#D4AF37" stroke-width="2"/>
