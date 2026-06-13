@@ -15,6 +15,33 @@ if (!firebase.apps.length) {
 }
 const db = firebase.database();
 
+// --- CUSTOM IMAGE DICTIONARY ---
+// Paste direct image URLs (like Imgur links) inside the quotes for your custom competitors!
+// Make sure the link ends in .jpg, .png, etc.
+const customImages = {
+    "Choo-Beng": "https://en.wikipedia.org/wiki/File:Herpestes_ichneumon_Египетский_мангуст,_или_фараонова_крыса,_или_ихневмо́н.jpg",
+    "Laura C": "https://en.wikipedia.org/wiki/File:White_witch_in_battle_for_naria.jpg",
+    "Mommy I": "",
+    "Bart S": "",
+    "Anna S": "",
+    "Gene S": "",
+    "Mike L": "",
+    "AB": "",
+    "Gary Plauche": "", // Note: If he has a Wiki page, you can move him to the dictionary below!
+    "Stephanie C": "",
+    "Nicole L": "",
+    "The Painter?": "https://en.wikipedia.org/wiki/File:Adolf_Hitler_-_06.jpg",
+    "Chuck M": "",
+    "Rusty M": "",
+    "Gopal": "",
+    "Bubba": "",
+    "Joe U": "",
+    "Jason W": "",
+    "McKenzie Maher": "",
+    "Erica Kirk": "",
+    "JC Yang": ""
+};
+
 // --- WIKIPEDIA ARTICLE DICTIONARY ---
 // Instead of fragile image file names, we just provide the Wikipedia Article Title!
 // The API will dynamically fetch the official "profile picture" of that article.
@@ -135,15 +162,20 @@ function getImageUrl(name) {
     
     let cleanName = name.trim();
     
-    // 1. If the Wikipedia API has provided the live URL, use it immediately!
+    // 1. Check if you provided a custom URL!
+    if (customImages[cleanName] && customImages[cleanName] !== "") {
+        return customImages[cleanName];
+    }
+
+    // 2. If the Wikipedia API has provided the live URL, use it immediately!
     if (resolvedImages[cleanName]) return resolvedImages[cleanName];
     
-    // 2. Hide waiting/TBD images
+    // 3. Hide waiting/TBD images
     if (cleanName.includes("Waiting") || cleanName.includes("TBD")) {
          return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
     
-    // 3. Golden SVG Fallback (Used while loading, or for internal names like "Laura C")
+    // 4. Golden SVG Fallback (Used while loading, or for internal names like "Laura C")
     let initial = cleanName.charAt(0).toUpperCase();
     let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
         <rect width="100" height="100" fill="#111111" stroke="#D4AF37" stroke-width="2"/>
