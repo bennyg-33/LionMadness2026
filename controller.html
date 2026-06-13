@@ -2,127 +2,160 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lion Madness Controller</title>
+  <title>Game Master Controller</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <style>
     body { background-color: #050505; color: #fff; font-family: 'Oswald', sans-serif; text-align: center; padding: 20px; margin: 0; }
     h2 { color: #D4AF37; letter-spacing: 3px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+    button { width: 100%; padding: 20px; margin: 10px 0; font-size: 1.5em; border-radius: 5px; border: 2px solid #444; font-family: 'Oswald'; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: 0.2s; background: #111; color: white;}
     
-    input { width: 90%; padding: 20px; font-size: 1.5em; background: #111; color: white; border: 2px solid #444; border-radius: 5px; margin-bottom: 20px; font-family: 'Oswald'; text-align: center; }
-    button { width: 100%; padding: 25px; margin: 10px 0; font-size: 1.5em; border-radius: 5px; border: 2px solid #444; font-family: 'Oswald'; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: 0.2s; background: #111; color: white;}
+    .btn-team.selected { background-color: #D4AF37; color: #000; border-color: #D4AF37; }
     
-    .btn-team.selected { background-color: #ff9800; color: #000; border-color: #ff9800; }
-    .btn-lock { background-color: #2e7d32; border-color: #4caf50; font-size: 2em; padding: 35px; box-shadow: 0 0 20px rgba(76, 175, 80, 0.5); display: none; }
-    .btn-lock:active { transform: scale(0.95); }
+    .btn-admin { background-color: #8A0303; color: white; border-color: #ff0000; }
+    .btn-advance { background-color: #2e7d32; color: white; border-color: #4caf50; font-size: 1.8em; padding: 30px; }
     
     #match-info { color: #aaa; margin-top: 10px; font-size: 1.2em; }
-    .status-msg { font-size: 1.8em; color: #D4AF37; margin-top: 50px; line-height: 1.5; }
+    .tally { font-size: 2em; color: #D4AF37; margin: 20px 0; font-weight: bold; }
+    
+    #host-controls { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; margin-top: 30px; }
   </style>
 </head>
 <body>
   
-  <h2>COMMITTEE REMOTE</h2>
+  <h2>COMMITTEE VOTING</h2>
+  <div id="match-info">Loading...</div>
   
-  <!-- PHASE: REGISTRATION -->
-  <div id="view-register" style="display:none;">
-      <h3 style="color:#aaa;">Enter your name to join the committee</h3>
-      <input type="text" id="voter-name" placeholder="YOUR NAME">
-      <button onclick="register()" style="background:#D4AF37; color:#000; border-color:#D4AF37;">JOIN ARENA</button>
-  </div>
-
-  <!-- PHASE: BRACKET / WAITING -->
-  <div id="view-waiting" style="display:none;">
-      <div id="match-info"></div>
-      <div class="status-msg" id="waiting-msg">Look at the TV!<br>Waiting for Match to Start...</div>
+  <!-- PHASE: BRACKET -->
+  <div id="view-bracket" style="display:none;">
+      <h3 style="color:#aaa; margin-top: 50px;">Waiting on Host to start match...</h3>
   </div>
 
   <!-- PHASE: VOTING -->
   <div id="view-voting" style="display:none;">
-      <div id="match-info-vote"></div>
-      <button id="btn-t1" class="btn-team" onclick="selectTeam(1)">TEAM 1</button>
+      <button id="btn-t1" class="btn-team" onclick="castVote(1)">TEAM 1</button>
       <h3 style="color: #8A0303; margin: 5px;">VS</h3>
-      <button id="btn-t2" class="btn-team" onclick="selectTeam(2)">TEAM 2</button>
-      <button id="btn-lock" class="btn-lock" onclick="lockIn()">🔒 LOCK IN VOTE</button>
+      <button id="btn-t2" class="btn-team" onclick="castVote(2)">TEAM 2</button>
+      
+      <div class="tally" id="vote-tally">VOTES IN: 0 / 5</div>
   </div>
 
-  <!-- MUST BE INCLUDED TO CONNECT TO FIREBASE -->
-  <script src="logic.js"></script>
+  <!-- PHASE: REVEAL -->
+  <div id="view-reveal" style="display:none;">
+      <h1 class="gold-text" style="font-size: 2.5em; color: #D4AF37;">WINNER REVEALED ON TV!</h1>
+      <h3 id="winner-name" style="color: #fff;"></h3>
+  </div>
 
+  <!-- HOST CONTROLS -->
+  <div id="host-controls">
+      <h3 style="margin-top:0; color:#8A0303;">--- HOST CONTROLS ---</h3>
+      <button id="btn-start-match" onclick="setPhase('VOTING')" style="display:none;" class="btn-admin">📺 ZOOM IN & START VOTING</button>
+      <button id="btn-confirm-winner" onclick="confirmWinner()" style="display:none;" class="btn-advance">✅ CONFIRM MAJORITY WINNER</button>
+      <button id="btn-next-match" onclick="nextMatch()" style="display:none;" class="btn-admin">⏭️ SHOW BRACKET & NEXT MATCH</button>
+      <button class="btn-admin" style="margin-top: 40px; font-size: 1em;" onclick="initializeTournament()">⚠️ NUKE BRACKET</button>
+  </div>
+
+  <script src="logic.js"></script>
   <script>
-    // USING sessionStorage FOR TAB TESTING - SWAP TO localStorage for live event!
-    let myVoterId = sessionStorage.getItem('lion_voter_id');
-    if(!myVoterId) { 
-        myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9); 
-        sessionStorage.setItem('lion_voter_id', myVoterId); 
+    let myVoterId = localStorage.getItem('lion_voter_id');
+    if(!myVoterId) {
+        myVoterId = 'voter_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('lion_voter_id', myVoterId);
     }
 
-    let currentSelection = 0;
     let currentMatch = null;
+    let currentData = null;
+    let myVote = null;
 
     db.ref('tournament').on('value', (snapshot) => {
-      const data = snapshot.val();
-      if(!data) return;
-      
-      currentMatch = data.matches ? data.matches[data.currentMatchId] : null;
-      let myVote = (data.votes && data.votes[myVoterId]) ? data.votes[myVoterId] : null;
-      let isRegistered = (data.users && data.users[myVoterId]);
+      currentData = snapshot.val();
+      if(currentData && currentData.matches) {
+         currentMatch = currentData.matches[currentData.currentMatchId];
+         let votes = currentData.votes || {};
+         myVote = votes[myVoterId];
 
-      document.getElementById('view-register').style.display = "none";
-      document.getElementById('view-waiting').style.display = "none";
-      document.getElementById('view-voting').style.display = "none";
+         document.getElementById('match-info').innerText = `MATCH ${currentData.currentMatchId + 1} / 67 | ${currentMatch.t1} vs ${currentMatch.t2}`;
 
-      if(data.phase === "REGISTRATION" && !isRegistered) {
-          document.getElementById('view-register').style.display = "block";
-          sessionStorage.removeItem('lion_voter_name'); 
-      } 
-      else if (data.phase === "VOTING" && isRegistered) {
-          document.getElementById('view-voting').style.display = "block";
-          document.getElementById('match-info-vote').innerText = `MATCH ${data.currentMatchId + 1} / 67`;
-          
-          document.getElementById('btn-t1').innerText = currentMatch.t1;
-          document.getElementById('btn-t2').innerText = currentMatch.t2;
-          
-          currentSelection = myVote ? myVote.team : 0;
-          document.getElementById('btn-t1').className = currentSelection === 1 ? 'btn-team selected' : 'btn-team';
-          document.getElementById('btn-t2').className = currentSelection === 2 ? 'btn-team selected' : 'btn-team';
+         document.getElementById('view-bracket').style.display = currentData.phase === "BRACKET" ? "block" : "none";
+         document.getElementById('view-voting').style.display = currentData.phase === "VOTING" ? "block" : "none";
+         document.getElementById('view-reveal').style.display = currentData.phase === "REVEAL" ? "block" : "none";
 
-          if(myVote && myVote.locked) {
-              document.getElementById('btn-t1').disabled = true; document.getElementById('btn-t2').disabled = true;
-              document.getElementById('btn-lock').style.display = "none";
-              document.getElementById('match-info-vote').innerHTML += `<br><span style="color:#4caf50; font-weight:bold;">LOCKED IN. Waiting for others...</span>`;
-          } else {
-              document.getElementById('btn-t1').disabled = false; document.getElementById('btn-t2').disabled = false;
-              document.getElementById('btn-lock').style.display = currentSelection !== 0 ? "block" : "none";
-          }
-      }
-      else {
-          document.getElementById('view-waiting').style.display = "block";
-          if(currentMatch) document.getElementById('match-info').innerText = `NEXT: ${currentMatch.t1} vs ${currentMatch.t2}`;
-          
-          if(data.phase === "REVEAL") document.getElementById('waiting-msg').innerHTML = `<span style="color:#D4AF37; font-size:1.5em">${currentMatch.winner} WINS!</span><br>Wait for TV...`;
-          else if(data.phase === "CHAMPION_CELEBRATION" || data.phase === "PATH_HIGHLIGHT") document.getElementById('waiting-msg').innerText = "TOURNAMENT COMPLETE!";
-          else document.getElementById('waiting-msg').innerText = "Look at the TV!\nWaiting for Match to Start...";
+         document.getElementById('btn-start-match').style.display = currentData.phase === "BRACKET" ? "block" : "none";
+         document.getElementById('btn-confirm-winner').style.display = currentData.phase === "VOTING" ? "block" : "none";
+         document.getElementById('btn-next-match').style.display = currentData.phase === "REVEAL" ? "block" : "none";
+
+         if(currentData.phase === "VOTING") {
+             document.getElementById('btn-t1').innerText = currentMatch.t1;
+             document.getElementById('btn-t2').innerText = currentMatch.t2;
+             
+             document.getElementById('btn-t1').className = myVote === 1 ? 'btn-team selected' : 'btn-team';
+             document.getElementById('btn-t2').className = myVote === 2 ? 'btn-team selected' : 'btn-team';
+
+             let totalVotes = Object.keys(votes).length;
+             document.getElementById('vote-tally').innerText = `VOTES IN: ${totalVotes} / 5`;
+             
+             if(totalVotes >= 5) {
+                 document.getElementById('btn-confirm-winner').style.backgroundColor = "#D4AF37";
+                 document.getElementById('btn-confirm-winner').style.color = "#000";
+             } else {
+                 document.getElementById('btn-confirm-winner').style.backgroundColor = "#111";
+                 document.getElementById('btn-confirm-winner').style.color = "#fff";
+             }
+         }
+
+         if(currentData.phase === "REVEAL") {
+             document.getElementById('winner-name').innerText = currentMatch.winner + " DOMINATES!";
+         }
       }
     });
 
-    function register() {
-       let name = document.getElementById('voter-name').value.trim();
-       if(name === "") { alert("Enter a name!"); return; }
-       db.ref(`tournament/users/${myVoterId}`).set(name);
-       sessionStorage.setItem('lion_voter_name', name);
+    function setPhase(newPhase) {
+        if(newPhase === 'VOTING' && (currentMatch.t1.includes("Waiting") || currentMatch.t2.includes("Waiting"))) {
+            alert("Waiting on earlier matches to finish!"); return;
+        }
+        db.ref('tournament/phase').set(newPhase);
     }
 
-    function selectTeam(teamNum) {
-       currentSelection = teamNum;
-       db.ref(`tournament/votes/${myVoterId}`).set({ team: teamNum, locked: false });
+    function castVote(teamNum) {
+        db.ref(`tournament/votes/${myVoterId}`).set(teamNum);
     }
 
-    function lockIn() {
-       if (currentSelection !== 0) {
-           db.ref(`tournament/votes/${myVoterId}`).set({ team: currentSelection, locked: true });
-       }
+    function confirmWinner() {
+        let votes = currentData.votes || {};
+        let t1Count = 0; let t2Count = 0;
+        
+        Object.values(votes).forEach(v => {
+            if(v === 1) t1Count++;
+            if(v === 2) t2Count++;
+        });
+
+        if(t1Count === 0 && t2Count === 0) {
+            alert("No votes cast yet!"); return;
+        }
+
+        let winnerName = t1Count > t2Count ? currentMatch.t1 : currentMatch.t2;
+        if(t1Count === t2Count) { alert("It's a tie! Someone change their vote."); return; }
+
+        if(confirm(`Majority selects ${winnerName}. Lock it in?`)) {
+            db.ref(`tournament/matches/${currentMatch.id}/winner`).set(winnerName);
+            if(currentMatch.nextMatch !== undefined) {
+                db.ref(`tournament/matches/${currentMatch.nextMatch}/${currentMatch.nextSlot}`).set(winnerName);
+            }
+            setPhase('REVEAL');
+        }
+    }
+
+    function nextMatch() {
+        if (currentMatch.id < 66) {
+            db.ref('tournament').update({
+                currentMatchId: currentMatch.id + 1,
+                phase: 'BRACKET',
+                votes: null
+            });
+        } else {
+            alert(`TOURNAMENT COMPLETE!`);
+        }
     }
   </script>
 </body>

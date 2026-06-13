@@ -208,27 +208,47 @@ function shuffle(array) {
 function initializeTournament() {
   const randomized = shuffle([...rawCompetitors]);
   let matches = [];
-  for(let i=0; i<67; i++) matches.push({ id: i, t1: "TBD", t2: "TBD", winner: null });
+  
+  for(let i=0; i<67; i++) {
+      matches.push({ id: i, t1: "TBD", t2: "TBD", winner: null });
+  }
 
+  // Route winners through the bracket
   for(let i=0; i<32; i++) { matches[i+4].nextMatch = 36 + Math.floor(i/2); matches[i+4].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<16; i++) { matches[i+36].nextMatch = 52 + Math.floor(i/2); matches[i+36].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<8; i++) { matches[i+52].nextMatch = 60 + Math.floor(i/2); matches[i+52].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<4; i++) { matches[i+60].nextMatch = 64 + Math.floor(i/2); matches[i+60].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
   for(let i=0; i<2; i++) { matches[i+64].nextMatch = 66; matches[i+64].nextSlot = (i%2 === 0) ? 't1' : 't2'; }
 
-  for(let i=0; i<4; i++) { matches[i].t1 = randomized[i*2]; matches[i].t2 = randomized[i*2 + 1]; matches[i].nextMatch = [4, 12, 20, 28][i]; matches[i].nextSlot = 't2'; }
+  // Initial Seedings for First Four
+  for(let i=0; i<4; i++) {
+      matches[i].t1 = randomized[i*2];
+      matches[i].t2 = randomized[i*2 + 1];
+      matches[i].nextMatch = [4, 12, 20, 28][i];
+      matches[i].nextSlot = 't2';
+  }
 
-  let teamIdx = 0; let rem = randomized.slice(8);
+  // Seed Main Bracket
+  let remainingTeams = randomized.slice(8);
+  let teamIdx = 0;
   for(let i=4; i<36; i++) {
-      if ([4, 12, 20, 28].includes(i)) { matches[i].t1 = rem[teamIdx++]; matches[i].t2 = "Waiting on First Four..."; } 
-      else { matches[i].t1 = rem[teamIdx++]; matches[i].t2 = rem[teamIdx++]; }
+      if ([4, 12, 20, 28].includes(i)) {
+          matches[i].t1 = remainingTeams[teamIdx++];
+          matches[i].t2 = "Waiting on First Four..."; 
+      } else {
+          matches[i].t1 = remainingTeams[teamIdx++];
+          matches[i].t2 = remainingTeams[teamIdx++];
+      }
   }
 
   db.ref('tournament').set({
-    phase: "REGISTRATION", 
+    phase: "BRACKET", 
     currentMatchId: 0,
     matches: matches,
-    votes: null,
-    users: null
+    votes: null
+  }).then(() => {
+    alert("ALPHA BRACKET GENERATED AND SYNCED.");
+  }).catch((error) => {
+    console.error("Error generating bracket: ", error);
   });
 }
