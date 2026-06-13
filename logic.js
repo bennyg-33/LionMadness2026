@@ -19,27 +19,27 @@ const db = firebase.database();
 // Paste direct image URLs (like Imgur links) inside the quotes for your custom competitors!
 // Make sure the link ends in .jpg, .png, etc.
 const customImages = {
-    "Choo-Beng": "https://en.wikipedia.org/wiki/File:Herpestes_ichneumon_Египетский_мангуст,_или_фараонова_крыса,_или_ихневмо́н.jpg",
+    "Choo-Beng": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Herpestes_ichneumon_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%BC%D0%B0%D0%BD%D0%B3%D1%83%D1%81%D1%82%2C_%D0%B8%D0%BB%D0%B8_%D1%84%D0%B0%D1%80%D0%B0%D0%BE%D0%BD%D0%BE%D0%B2%D0%B0_%D0%BA%D1%80%D1%8B%D1%81%D0%B0%2C_%D0%B8%D0%BB%D0%B8_%D0%B8%D1%85%D0%BD%D0%B5%D0%B2%D0%BC%D0%BE%CC%81%D0%BD.jpg",
     "Laura C": "https://upload.wikimedia.org/wikipedia/en/d/dc/White_witch_in_battle_for_naria.jpg",
-    "Mommy I": "",
-    "Bart S": "",
-    "Anna S": "",
-    "Gene S": "",
-    "Mike L": "",
-    "AB": "",
-    "Gary Plauche": "", // Note: If he has a Wiki page, you can move him to the dictionary below!
-    "Stephanie C": "",
-    "Nicole L": "",
-    "The Painter?": "https://en.wikipedia.org/wiki/File:Adolf_Hitler_-_06.jpg",
-    "Chuck M": "",
-    "Rusty M": "",
-    "Gopal": "",
-    "Bubba": "",
-    "Joe U": "",
-    "Jason W": "",
-    "McKenzie Maher": "",
-    "Erica Kirk": "",
-    "JC Yang": ""
+    "Mommy I": "https://upload.wikimedia.org/wikipedia/commons/3/38/Asymmetrical_bob_%2851210139996%29.jpg",
+    "Bart S": "https://upload.wikimedia.org/wikipedia/commons/c/cd/James_Clerk_Maxwell_Statue_Equations.jpg",
+    "Anna S": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Kate_Gosselin.jpg",
+    "Gene S": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Henry_Winkler_Fonzie_1977.JPG",
+    "Mike L": "https://upload.wikimedia.org/wikipedia/commons/5/59/Evb-my_hog.jpg",
+    "AB": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Henry_Cejudo_%26_Antonio_Brown_%2854235293159%29.jpg",
+    "Gary Plauche": "https://upload.wikimedia.org/wikipedia/en/3/30/Gary_Plauche_shoots_Jeffery_Doucet.jpeg", // Note: If he has a Wiki page, you can move him to the dictionary below!
+    "Stephanie C": "https://upload.wikimedia.org/wikipedia/en/5/53/Jabba_the_Hutt_in_Return_of_the_Jedi_%281983%29.png",
+    "Nicole L": "https://media.licdn.com/dms/image/v2/D5603AQGQ9UERTnfP1w/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1678227230913?e=1782950400&v=beta&t=bNelaXWuZuMwxYsysnLJSOEmwagN2K44TbyB6emM2ec",
+    "The Painter?": "https://upload.wikimedia.org/wikipedia/commons/6/69/Adolf_Hitler_-_06.jpg",
+    "Chuck M": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Zahn_McClarnon_by_Gage_Skidmore.jpg",
+    "Rusty M": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Agriculture_in_Britain-_Life_on_George_Casely%27s_Farm%2C_Devon%2C_England%2C_1942_D9817.jpg",
+    "Gopal": "https://media.licdn.com/dms/image/v2/C5103AQE55H9UREcddQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1516266785068?e=1782950400&v=beta&t=4Ucd4OelWfaGKsC_QoHCH_ntK3g5Y5CC4ChL3bDKAJU",
+    "Bubba": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Bill_Clinton_saxophone_8a9e10f958efc78651fa4c9fb6228e2e_%28cropped%29.jpg",
+    "Joe U": "https://upload.wikimedia.org/wikipedia/commons/d/df/Julian_Richings_by_Gage_Skidmore.jpg",
+    "Jason W": "https://upload.wikimedia.org/wikipedia/en/5/53/Abraham-Whistler-Kris-Kristofferson-2004.jpg",
+    "McKenzie Maher": "https://upload.wikimedia.org/wikipedia/commons/7/76/Logo_of_Rohde_%26_Schwarz_%282009%29.svg",
+    "Erica Kirk": "https://unherd.com/wp-content/uploads/2026/03/Screenshot-2026-03-27-at-19.04.36.jpeg",
+    "JC Yang": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Social_Network_Analysis_Visualization.png"
 };
 
 // --- WIKIPEDIA ARTICLE DICTIONARY ---
