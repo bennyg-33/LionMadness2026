@@ -14,9 +14,11 @@
     .btn-team.selected { background-color: #D4AF37; color: #000; border-color: #D4AF37; }
     
     .btn-admin { background-color: #8A0303; color: white; border-color: #ff0000; }
-    .btn-advance { background-color: #111; color: white; border-color: #4caf50; font-size: 1.8em; padding: 30px; }
+    .btn-advance { background-color: #2e7d32; color: white; border-color: #4caf50; font-size: 1.8em; padding: 30px; }
     
     #match-info { color: #aaa; margin-top: 10px; font-size: 1.2em; }
+    .tally { font-size: 2em; color: #D4AF37; margin: 20px 0; font-weight: bold; }
+    
     #host-controls { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; margin-top: 30px; }
   </style>
 </head>
@@ -35,6 +37,8 @@
       <button id="btn-t1" class="btn-team" onclick="castVote(1)">TEAM 1</button>
       <h3 style="color: #8A0303; margin: 5px;">VS</h3>
       <button id="btn-t2" class="btn-team" onclick="castVote(2)">TEAM 2</button>
+      
+      <div class="tally" id="vote-tally">VOTES IN: 0 / 5</div>
   </div>
 
   <!-- PHASE: REVEAL -->
@@ -49,7 +53,7 @@
       <button id="btn-start-match" onclick="setPhase('VOTING')" style="display:none;" class="btn-admin">📺 ZOOM IN & START VOTING</button>
       <button id="btn-confirm-winner" onclick="confirmWinner()" style="display:none;" class="btn-advance">✅ CONFIRM MAJORITY WINNER</button>
       <button id="btn-next-match" onclick="nextMatch()" style="display:none;" class="btn-admin">⏭️ SHOW BRACKET & NEXT MATCH</button>
-      <button id="btn-nuke" class="btn-admin" style="margin-top: 40px; font-size: 1em;" onclick="attemptNuke()">⚠️ NUKE BRACKET</button>
+      <button class="btn-admin" style="margin-top: 40px; font-size: 1em;" onclick="initializeTournament()">⚠️ NUKE BRACKET</button>
   </div>
 
   <script src="logic.js"></script>
@@ -79,14 +83,7 @@
 
          document.getElementById('btn-start-match').style.display = currentData.phase === "BRACKET" ? "block" : "none";
          document.getElementById('btn-confirm-winner').style.display = currentData.phase === "VOTING" ? "block" : "none";
-         
-         let nextBtn = document.getElementById('btn-next-match');
-         nextBtn.style.display = currentData.phase === "REVEAL" ? "block" : "none";
-         if (currentMatch.id === 66) {
-             nextBtn.innerText = "🏆 SHOW CHAMPION PATH";
-         } else {
-             nextBtn.innerText = "⏭️ SHOW BRACKET & NEXT MATCH";
-         }
+         document.getElementById('btn-next-match').style.display = currentData.phase === "REVEAL" ? "block" : "none";
 
          if(currentData.phase === "VOTING") {
              document.getElementById('btn-t1').innerText = currentMatch.t1;
@@ -94,9 +91,11 @@
              
              document.getElementById('btn-t1').className = myVote === 1 ? 'btn-team selected' : 'btn-team';
              document.getElementById('btn-t2').className = myVote === 2 ? 'btn-team selected' : 'btn-team';
+
+             let totalVotes = Object.keys(votes).length;
+             document.getElementById('vote-tally').innerText = `VOTES IN: ${totalVotes} / 5`;
              
-             // Light up Confirm instantly if they have selected someone
-             if(myVote !== null && myVote !== undefined) {
+             if(totalVotes >= 5) {
                  document.getElementById('btn-confirm-winner').style.backgroundColor = "#D4AF37";
                  document.getElementById('btn-confirm-winner').style.color = "#000";
              } else {
@@ -123,11 +122,20 @@
     }
 
     function confirmWinner() {
-        if(!myVote) {
-            alert("You must tap a team to select the majority winner first!"); return;
+        let votes = currentData.votes || {};
+        let t1Count = 0; let t2Count = 0;
+        
+        Object.values(votes).forEach(v => {
+            if(v === 1) t1Count++;
+            if(v === 2) t2Count++;
+        });
+
+        if(t1Count === 0 && t2Count === 0) {
+            alert("No votes cast yet!"); return;
         }
 
-        let winnerName = myVote === 1 ? currentMatch.t1 : currentMatch.t2;
+        let winnerName = t1Count > t2Count ? currentMatch.t1 : currentMatch.t2;
+        if(t1Count === t2Count) { alert("It's a tie! Someone change their vote."); return; }
 
         if(confirm(`Majority selects ${winnerName}. Lock it in?`)) {
             db.ref(`tournament/matches/${currentMatch.id}/winner`).set(winnerName);
@@ -146,32 +154,7 @@
                 votes: null
             });
         } else {
-            // Trigger the final Championship Phase!
-            db.ref('tournament/phase').set('COMPLETE');
-        }
-    }
-
-    // --- PROTECTED 2-STEP NUKE ---
-    let nukeArmed = false;
-    function attemptNuke() {
-        let btn = document.getElementById('btn-nuke');
-        if(!nukeArmed) {
-            nukeArmed = true;
-            btn.innerText = "⚠️ CONFIRM NUKE? (3s)";
-            btn.style.backgroundColor = "#ff0000";
-            
-            // Defuse after 3 seconds
-            setTimeout(() => {
-                nukeArmed = false;
-                btn.innerText = "⚠️ NUKE BRACKET";
-                btn.style.backgroundColor = "#8A0303";
-            }, 3000);
-        } else {
-            // Nuke Executed!
-            nukeArmed = false;
-            btn.innerText = "⚠️ NUKE BRACKET";
-            btn.style.backgroundColor = "#8A0303";
-            initializeTournament();
+            alert(`TOURNAMENT COMPLETE!`);
         }
     }
   </script>
